@@ -1,0 +1,6 @@
+backend/e-learning/target/
+documents/database/
+.sync/
+*.jar
+*.sql
+*.backup
