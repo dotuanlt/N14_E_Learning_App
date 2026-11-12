@@ -129,6 +129,12 @@ export const ENDPOINTS = {
     LIST: '/saved-courses',
     TOGGLE: (courseId: string) => `/saved-courses/${courseId}`,
   },
+  CHAT: {
+    SEND: '/chat',
+    CONVERSATIONS: '/chat/conversations',
+    MESSAGES: (id: string) => `/chat/conversations/${id}/messages`,
+    DELETE: (id: string) => `/chat/conversations/${id}`,
+  },
   NOTIFICATIONS: {
     LIST: '/notifications',
     UNREAD_COUNT: '/notifications/unread-count',

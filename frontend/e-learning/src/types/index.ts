@@ -59,3 +59,4 @@ export interface QuizQuestion {
   options: string[];
   correctIndex: number;
 }
+export * from './chat';

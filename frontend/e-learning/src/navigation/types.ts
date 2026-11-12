@@ -24,6 +24,7 @@ export type RootStackParamList = {
   CoursePlayer: { id: string };
   CourseQa: { id: string };
   InstructorProfile: { id: string };
+  Chat: { courseId?: string; lessonId?: string; conversationId?: string; prompt?: string } | undefined;
   Cart: undefined;
   Checkout: undefined;
   CheckoutSuccess: undefined;

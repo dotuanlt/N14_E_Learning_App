@@ -17,6 +17,7 @@ export function resolveRoute(href: string | { pathname: string; params?: any }):
   if (path === '/checkout') return { screen: 'Checkout' };
   if (path === '/checkout-success') return { screen: 'CheckoutSuccess' };
   if (path === '/notifications') return { screen: 'Notifications' };
+  if (path === '/chat') return { screen: 'Chat', params };
   if (path === '/settings') return { screen: 'Settings' };
   if (path === '/welcome') return { screen: 'Welcome' };
   if (path === '/login') return { screen: 'Login', params };

@@ -130,6 +130,13 @@ export default function CourseOverviewScreen() {
       }
     >
       <ScreenHeader title="Chi tiết khóa học" />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Hỏi trợ lý AI về khóa học này"
+        onPress={() => router.push({ pathname: '/chat', params: { courseId } })}
+        style={[styles.aiLink, { backgroundColor: theme.primarySoft, borderColor: theme.primaryBorder }]}>
+        <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>🤖 Hỏi trợ lý AI về khóa học này</Text>
+      </Pressable>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <CourseHero
           activeTab={activeTab}
@@ -242,6 +249,7 @@ export default function CourseOverviewScreen() {
 }
 
 const styles = StyleSheet.create({
+  aiLink: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center', marginBottom: 8 },
   content: {
     padding: Spacing.three,
     paddingBottom: Spacing.five,

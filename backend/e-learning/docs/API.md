@@ -103,6 +103,10 @@ Hoàn tiền: 🔐 `POST /me/enrollments/{id}/refund {reason}` (đang học, đ�
 ### Thông báo (🔐)
 `GET /notifications` · `GET /notifications/unread-count` · `PATCH /notifications/{id}/read` · `PATCH /notifications/read-all`
 
+### Trợ lý AI (🔐 `/chat`) – xem `docs/CHATBOT.md`
+`POST /chat {message, conversationId?, courseId?, lessonId?}` → `{conversationId, title, reply{id, role, content, courses[], createdAt}}` · `GET /chat/conversations` · `GET /chat/conversations/{id}/messages` · `DELETE /chat/conversations/{id}`
+Giới hạn 30 tin/giờ/người dùng (429 `TOO_MANY_ATTEMPTS`); mô hình AI lỗi/hết hạn mức → 503 `SERVICE_UNAVAILABLE`.
+
 ### Tệp (`/files`)
 🔐 `POST /files` (multipart: `file`, `type=IMAGE|VIDEO|DOCUMENT|PROJECT`) · 🌐 `GET /files/public/{key}` · `GET /files/content/{key}?exp=&sig=` (URL có chữ ký, có hạn)
 

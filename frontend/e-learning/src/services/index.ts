@@ -4,3 +4,4 @@ export * from './cartService';
 export * from './enrollmentService';
 export * from './notificationService';
 export * from './savedCourseService';
+export * from './chatService';

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from '@/navigation/routerHook';
 import { useState, useEffect } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -238,6 +238,13 @@ export default function CoursePlayerScreen() {
       }
     >
       <ScreenHeader title={courseData?.shortTitle || courseData?.title || 'Đang xem khóa học'} />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Hỏi trợ lý AI về khóa học này"
+        onPress={() => router.push({ pathname: '/chat', params: { courseId: id, lessonId: activeLesson?.id } })}
+        style={[styles.aiLink, { backgroundColor: theme.primarySoft, borderColor: theme.primaryBorder }]}>
+        <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>🤖 Hỏi trợ lý AI về khóa học này</Text>
+      </Pressable>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Video Player view for active lesson */}
         {activeLesson ? (
@@ -333,6 +340,7 @@ export default function CoursePlayerScreen() {
 }
 
 const styles = StyleSheet.create({
+  aiLink: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center', marginBottom: 8 },
   content: {
     padding: Spacing.three,
     paddingBottom: Spacing.five,

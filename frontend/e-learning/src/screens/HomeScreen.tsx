@@ -78,6 +78,14 @@ export default function HomeScreen() {
           <View style={styles.headerActions}>
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel="Trợ lý AI"
+              onPress={() => router.push('/chat')}
+              style={[styles.iconBtn, { backgroundColor: theme.surface }]}
+            >
+              <Icon sf="sparkles" emoji="🤖" size={20} color={theme.primary} />
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
               accessibilityLabel="Giỏ hàng"
               onPress={() => router.push('/cart')}
               style={[styles.iconBtn, { backgroundColor: theme.surface }]}

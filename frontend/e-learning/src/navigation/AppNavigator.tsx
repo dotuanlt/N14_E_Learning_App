@@ -15,6 +15,7 @@ import CourseReviewsScreen from '@/screens/CourseReviewsScreen';
 import CoursePlayerScreen from '@/screens/CoursePlayerScreen';
 import CourseQaScreen from '@/screens/CourseQaScreen';
 import InstructorProfileScreen from '@/screens/InstructorProfileScreen';
+import ChatScreen from '@/screens/ChatScreen';
 import CartScreen from '@/screens/CartScreen';
 import CheckoutScreen from '@/screens/CheckoutScreen';
 import CheckoutSuccessScreen from '@/screens/CheckoutSuccessScreen';
@@ -65,6 +66,7 @@ export function AppNavigator() {
         <Stack.Screen name="CheckoutSuccess" component={CheckoutSuccessScreen} options={{ animation: 'fade' }} />
 
         {/* Other Features */}
+        <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="SearchFilter" component={SearchFilterScreen} options={{ presentation: 'transparentModal' }} />
