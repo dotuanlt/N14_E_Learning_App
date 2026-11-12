@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text } from 'react-native';
 
 import { Icon } from '@/components/ui/icon';
 import { Radius, Spacing } from '@/constants/theme';
@@ -13,7 +14,7 @@ export function FilterButton({ onPress, label = 'Lọc' }: FilterButtonProps) {
   const theme = useTheme();
 
   return (
-    <Pressable
+    <PressableScale haptic="selection"
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -23,7 +24,7 @@ export function FilterButton({ onPress, label = 'Lọc' }: FilterButtonProps) {
       ]}>
       <Icon name="slider.horizontal.3" glyph="☰" size={16} color={theme.onPrimary} />
       <Text style={[styles.label, { color: theme.onPrimary }]}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

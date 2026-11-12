@@ -48,4 +48,22 @@ public class Payment extends AuditableEntity {
 
     @Column(name = "paid_at")
     private Instant paidAt;
+
+    /** Nguồn tiền (CARD | MOMO | ZALOPAY) được ghi trong raw_response dạng "PROVIDER=XXX". */
+    public String provider() {
+        if (rawResponse == null) {
+            return null;
+        }
+        int i = rawResponse.indexOf("PROVIDER=");
+        if (i < 0) {
+            return null;
+        }
+        String rest = rawResponse.substring(i + 9);
+        int end = rest.indexOf(';');
+        return (end < 0 ? rest : rest.substring(0, end)).trim();
+    }
+
+    public static String tag(String raw, String provider) {
+        return provider == null || provider.isBlank() ? raw : raw + ";PROVIDER=" + provider;
+    }
 }

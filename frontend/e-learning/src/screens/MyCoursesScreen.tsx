@@ -1,4 +1,8 @@
+import { Icon } from '@/components/ui/icon';
 import { useEffect, useMemo, useState } from 'react';
+import { FadeIn } from '@/components/ui/fade-in';
+import { padToColumns, useResponsive } from '@/hooks/use-responsive';
+import { SkeletonList } from '@/components/ui/skeleton';
 import { useRouter } from '@/navigation/routerHook';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,18 +25,22 @@ const tabLabels: { key: TabKey; label: string }[] = [
 ];
 
 export default function MyCoursesScreen() {
+  const { columns, wideMax } = useResponsive();
   const router = useRouter();
   const theme = useTheme();
   const { user } = useAppStore();
   const [tab, setTab] = useState<TabKey>('all');
   const [allCourses, setAllCourses] = useState<MyCourse[]>([]);
+  const [loading, setLoading] = useState(Boolean(user));
 
   useEffect(() => {
     if (!user) {
       setAllCourses([]);
+      setLoading(false);
       return;
     }
     let mounted = true;
+    setLoading(true);
     (async () => {
       try {
         const res = await enrollmentService.getMyEnrollments();
@@ -43,6 +51,8 @@ export default function MyCoursesScreen() {
         }
       } catch (err) {
         if (mounted) setAllCourses([]);
+      } finally {
+        if (mounted) setLoading(false);
       }
     })();
     return () => {
@@ -59,9 +69,12 @@ export default function MyCoursesScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
       <FlatList
-        data={items}
-        keyExtractor={(item) => item.id}
-        style={[styles.list, { maxWidth: MaxContentWidth }]}
+        key={`cols-${columns}`}
+        data={padToColumns(items, columns)}
+        numColumns={columns}
+        columnWrapperStyle={columns > 1 ? { gap: Spacing.three } : undefined}
+        keyExtractor={(item, i) => (item ? item.id : `pad-${i}`)}
+        style={[styles.list, { maxWidth: wideMax }]}
         contentContainerStyle={{
           paddingHorizontal: Spacing.four,
           paddingTop: Spacing.three,
@@ -116,10 +129,13 @@ export default function MyCoursesScreen() {
           </View>
         }
         ListEmptyComponent={
+          loading ? (
+            <SkeletonList count={4} />
+          ) : (
           <View style={styles.emptyContainer}>
-            <ThemedText style={{ fontSize: 44, textAlign: 'center', marginBottom: Spacing.two }}>
-              📚
-            </ThemedText>
+            <View style={{ alignItems: 'center', marginBottom: Spacing.two }}>
+              <Icon name="courses" weight="duotone" size={56} color={theme.primary} />
+            </View>
             <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>
               {user ? 'Bạn chưa có khóa học nào' : 'Chưa đăng nhập'}
             </ThemedText>
@@ -137,13 +153,17 @@ export default function MyCoursesScreen() {
               </ThemedText>
             </Pressable>
           </View>
+          )
         }
-        renderItem={({ item }) => (
-          <MyCourseCard
-            course={item}
-            onPress={() => router.push(`/course/${item.id}/player` as any)}
-          />
-        )}
+        renderItem={({ item, index }) =>
+          item ? (
+            <FadeIn index={index} style={{ flex: 1 }}>
+              <MyCourseCard course={item} onPress={() => router.push(`/course/${item.id}/player` as any)} />
+            </FadeIn>
+          ) : (
+            <View style={{ flex: 1 }} />
+          )
+        }
       />
       <BottomNavBar currentTab="courses" />
     </SafeAreaView>

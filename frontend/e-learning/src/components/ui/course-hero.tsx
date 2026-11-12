@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Icon } from '@/components/ui/icon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 
@@ -73,7 +74,7 @@ export function CourseHero({
           onPress={onPlayPress}
           style={[styles.play, { backgroundColor: theme.backgroundElement }]}
         >
-          <Text style={[styles.playIcon, { color: theme.primary }]}>▶</Text>
+          <Icon name="play" weight="fill" size={20} color={theme.primary} />
         </Pressable>
       </View>
 

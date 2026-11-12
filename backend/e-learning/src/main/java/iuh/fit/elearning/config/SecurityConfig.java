@@ -1,10 +1,10 @@
 package iuh.fit.elearning.config;
 
+import iuh.fit.elearning.auth.security.AuthUserCache;
 import iuh.fit.elearning.auth.security.JwtAuthenticationFilter;
 import iuh.fit.elearning.auth.security.JwtService;
 import iuh.fit.elearning.auth.security.RestAccessDeniedHandler;
 import iuh.fit.elearning.auth.security.RestAuthenticationEntryPoint;
-import iuh.fit.elearning.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,11 +34,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtService jwtService,
-                                                   UserRepository userRepository,
+                                                   AuthUserCache authUserCache,
                                                    RestAuthenticationEntryPoint entryPoint,
                                                    RestAccessDeniedHandler accessDeniedHandler,
                                                    CorsConfigurationSource corsConfigurationSource) throws Exception {
-        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService, userRepository);
+        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService, authUserCache);
 
         http
                 .csrf(csrf -> csrf.disable())

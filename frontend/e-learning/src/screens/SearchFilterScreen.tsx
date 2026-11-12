@@ -14,8 +14,8 @@ const SORT_OPTIONS = [
   { id: 'popular', label: 'Phổ biến' },
   { id: 'newest', label: 'Mới nhất' },
   { id: 'rating', label: 'Đánh giá cao' },
-  { id: 'price_asc', label: 'Giá thấp → cao' },
-  { id: 'price_desc', label: 'Giá cao → thấp' },
+  { id: 'price_asc', label: 'Giá thấp đến cao' },
+  { id: 'price_desc', label: 'Giá cao đến thấp' },
 ];
 
 const PRICE_PRESETS = [

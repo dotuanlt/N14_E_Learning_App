@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { notify } from '@/lib/notify';
 import { useRouter } from '@/navigation/routerHook';
 import { useTheme } from '@/hooks/use-theme';
 import { Screen } from '@/components/ui/screen';
@@ -35,11 +36,11 @@ export default function ForgotPasswordScreen() {
   const handleRequest = async () => {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail) {
-      Alert.alert('Lỗi', 'Vui lòng nhập địa chỉ email của bạn');
+      notify.alert('Lỗi', 'Vui lòng nhập địa chỉ email của bạn');
       return;
     }
     if (!isValidEmail(normalizedEmail)) {
-      Alert.alert('Lỗi', 'Email không đúng định dạng');
+      notify.alert('Lỗi', 'Email không đúng định dạng');
       return;
     }
 
@@ -50,12 +51,12 @@ export default function ForgotPasswordScreen() {
       setOtp('');
       setCooldown(Math.max(1, res?.resendAfterSeconds ?? 60));
       setStep('reset');
-      Alert.alert(
+      notify.alert(
         'Đã gửi mã xác nhận',
         `Nếu email ${normalizedEmail} hợp lệ, mã OTP đặt lại mật khẩu đã được gửi về hộp thư của bạn.`,
       );
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.message || 'Không thể gửi yêu cầu đặt lại mật khẩu');
+      notify.alert('Lỗi', err?.message || 'Không thể gửi yêu cầu đặt lại mật khẩu');
     } finally {
       setLoading(false);
     }
@@ -68,9 +69,9 @@ export default function ForgotPasswordScreen() {
       setResending(true);
       const res = await authService.resendOtp(normalizedEmail, 'RESET_PASSWORD');
       setCooldown(Math.max(1, res?.resendAfterSeconds ?? 60));
-      Alert.alert('Đã gửi lại mã OTP', `Mã OTP mới đã được gửi tới ${normalizedEmail}.`);
+      notify.alert('Đã gửi lại mã OTP', `Mã OTP mới đã được gửi tới ${normalizedEmail}.`);
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.message || 'Không thể gửi lại mã OTP lúc này');
+      notify.alert('Lỗi', err?.message || 'Không thể gửi lại mã OTP lúc này');
     } finally {
       setResending(false);
     }
@@ -80,22 +81,22 @@ export default function ForgotPasswordScreen() {
     const normalizedEmail = email.trim().toLowerCase();
     const trimmedOtp = otp.trim();
     if (!isValidOtp(trimmedOtp)) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đúng mã OTP gồm 6 chữ số');
+      notify.alert('Lỗi', 'Vui lòng nhập đúng mã OTP gồm 6 chữ số');
       return;
     }
     if (!isStrongEnoughPassword(newPassword)) {
-      Alert.alert('Lỗi', 'Mật khẩu mới tối thiểu 8 ký tự, gồm cả chữ và số');
+      notify.alert('Lỗi', 'Mật khẩu mới tối thiểu 8 ký tự, gồm cả chữ và số');
       return;
     }
     if (confirmPassword !== newPassword) {
-      Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
+      notify.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
       return;
     }
 
     try {
       setLoading(true);
       await authService.resetPassword(normalizedEmail, trimmedOtp, newPassword);
-      Alert.alert('Thành công', 'Mật khẩu đã được cập nhật thành công! Vui lòng đăng nhập lại.', [
+      notify.alert('Thành công', 'Mật khẩu đã được cập nhật thành công! Vui lòng đăng nhập lại.', [
         {
           text: 'Đăng nhập',
           onPress: () =>
@@ -106,7 +107,7 @@ export default function ForgotPasswordScreen() {
         },
       ]);
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.message || 'Không thể đặt lại mật khẩu');
+      notify.alert('Lỗi', err?.message || 'Không thể đặt lại mật khẩu');
     } finally {
       setLoading(false);
     }

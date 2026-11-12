@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -14,7 +15,7 @@ export function ProjectCard({ project, onPress, style }: Props) {
   const theme = useAppTheme();
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`Dự án ${project.title} của ${project.author}`}
       onPress={onPress}
@@ -27,7 +28,7 @@ export function ProjectCard({ project, onPress, style }: Props) {
       <Text numberOfLines={1} style={[styles.author, { color: theme.textSecondary }]}>
         {project.author}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

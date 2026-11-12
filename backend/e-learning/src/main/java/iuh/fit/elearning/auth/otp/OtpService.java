@@ -12,7 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 import java.util.Optional;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Sinh, gửi và kiểm tra OTP (SDS 8.1): 6 chữ số ngẫu nhiên (SecureRandom), lưu SHA-256 hash trong OtpStore,
@@ -21,6 +26,9 @@ import java.util.Optional;
 @Slf4j
 @Service
 public class OtpService {
+
+    /** Gửi email ở nền (virtual thread) để API đăng ký trả lời ngay, không chờ máy chủ SMTP. */
+    private static final Executor MAIL_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
     private final OtpStore store;
     private final OtpProperties props;
@@ -57,6 +65,54 @@ public class OtpService {
                 store.delete(purpose, email);
                 store.clearCooldown(purpose, email);
                 throw e;
+            }
+        } catch (DataAccessException e) {
+            log.error("Không truy cập được kho OTP (Redis): {}", e.getMessage());
+            throw new BusinessException(ErrorCode.SERVICE_UNAVAILABLE);
+        }
+    }
+
+    /**
+     * Như {@link #issue} nhưng chỉ sinh + lưu OTP đồng bộ (rất nhanh); việc gửi email chạy ở nền, sau khi
+     * transaction hiện tại commit. Nếu gửi lỗi thì hủy OTP và nhả cooldown để người dùng bấm "Gửi lại" ngay.
+     */
+    public void issueDeferred(OtpPurpose purpose, String email, String fullName) {
+        try {
+            if (!store.tryStartCooldown(purpose, email, props.resendCooldown())) {
+                long remain = Math.max(1, store.cooldownRemainingSeconds(purpose, email));
+                throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS,
+                        "Vui lòng đợi " + remain + " giây trước khi yêu cầu mã mới");
+            }
+            String code = CodeGenerator.numericOtp(props.length());
+            try {
+                store.save(purpose, email, HashUtils.sha256Hex(code), props.ttl());
+            } catch (RuntimeException e) {
+                store.delete(purpose, email);
+                store.clearCooldown(purpose, email);
+                throw e;
+            }
+            Runnable send = () -> {
+                try {
+                    sendMail(purpose, email, fullName, code);
+                } catch (RuntimeException e) {
+                    log.error("Gửi OTP tới {} thất bại (người dùng có thể bấm Gửi lại): {}", email, e.getMessage());
+                    try {
+                        store.delete(purpose, email);
+                        store.clearCooldown(purpose, email);
+                    } catch (RuntimeException ignored) {
+                        // kho OTP lỗi: cooldown tự hết hạn
+                    }
+                }
+            };
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        MAIL_EXECUTOR.execute(send);
+                    }
+                });
+            } else {
+                MAIL_EXECUTOR.execute(send);
             }
         } catch (DataAccessException e) {
             log.error("Không truy cập được kho OTP (Redis): {}", e.getMessage());

@@ -29,13 +29,14 @@ public final class ChatToolContext {
         return contextCourseId;
     }
 
-    public void reference(UUID courseId) {
+    /** Có thể được gọi đồng thời từ nhiều hàm chạy song song nên cần synchronized. */
+    public synchronized void reference(UUID courseId) {
         if (courseId != null) {
             referencedCourseIds.add(courseId);
         }
     }
 
-    public Set<UUID> referencedCourseIds() {
-        return referencedCourseIds;
+    public synchronized Set<UUID> referencedCourseIds() {
+        return new LinkedHashSet<>(referencedCourseIds);
     }
 }

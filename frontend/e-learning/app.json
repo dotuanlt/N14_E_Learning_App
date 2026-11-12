@@ -37,7 +37,8 @@
       "expo-sharing",
       "expo-video",
       "expo-router",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-secure-store"
     ],
     "experiments": {
       "reactCompiler": true

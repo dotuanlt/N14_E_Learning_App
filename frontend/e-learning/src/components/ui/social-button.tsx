@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text } from 'react-native';
 
 import { GoogleMark } from '@/components/ui/google-mark';
 import { Radius, Spacing } from '@/constants/theme';
@@ -15,7 +16,7 @@ export function SocialButton({ label, onPress, disabled = false, accessibilityLa
   const theme = useTheme();
 
   return (
-    <Pressable
+    <PressableScale haptic="light"
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -34,7 +35,7 @@ export function SocialButton({ label, onPress, disabled = false, accessibilityLa
       <Text style={[styles.label, { color: theme.text }]} numberOfLines={1}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from '@/navigation/routerHook';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { notify } from '@/lib/notify';
 
 import { ThemedText } from '@/components/themed-text';
 import { AppButton } from '@/components/ui/app-button';
@@ -25,7 +26,7 @@ import { useAppStore } from '@/store';
 
 export default function LoginScreen() {
   const theme = useTheme();
-  const params = useLocalSearchParams<{ email?: string }>();
+  const params = useLocalSearchParams<{ email?: string; verified?: string }>();
   const { setUser, refreshUserData } = useAppStore();
   const [email, setEmail] = useState(params.email || '');
   const [password, setPassword] = useState('');
@@ -74,7 +75,7 @@ export default function LoginScreen() {
       const msg = err?.message || 'Đăng nhập không thành công, vui lòng thử lại';
       setPasswordError(msg);
       if (err?.code === 'ACCOUNT_NOT_VERIFIED') {
-        Alert.alert('Tài khoản chưa xác thực', msg, [
+        notify.alert('Tài khoản chưa xác thực', msg, [
           { text: 'Để sau', style: 'cancel' },
           {
             text: 'Xác thực OTP ngay',
@@ -94,7 +95,7 @@ export default function LoginScreen() {
           },
         ]);
       } else {
-        Alert.alert('Đăng nhập thất bại', msg);
+        notify.alert('Đăng nhập thất bại', msg);
       }
     } finally {
       setLoading(false);
@@ -116,7 +117,7 @@ export default function LoginScreen() {
       await refreshUserData();
       router.replace('/');
     } catch (err: any) {
-      Alert.alert('Đăng nhập Google thất bại', err?.message || 'Không thể đăng nhập bằng Google lúc này.');
+      notify.alert('Đăng nhập Google thất bại', err?.message || 'Không thể đăng nhập bằng Google lúc này.');
     } finally {
       setGoogleLoading(false);
     }
@@ -135,6 +136,14 @@ export default function LoginScreen() {
         <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
           {loginCopy.subtitle}
         </ThemedText>
+
+        {params.verified === '1' ? (
+          <View style={[styles.successBanner, { backgroundColor: theme.successSoft, borderColor: theme.success }]}>
+            <Text style={[styles.successText, { color: theme.text }]}>
+              Tạo tài khoản thành công! Vui lòng đăng nhập để bắt đầu học.
+            </Text>
+          </View>
+        ) : null}
 
         <View style={styles.fields}>
           <FormField
@@ -211,6 +220,18 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  successBanner: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two + 2,
+    marginBottom: Spacing.three,
+  },
+  successText: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '600',
+  },
   header: {
     alignItems: 'flex-start',
     marginBottom: Spacing.three,

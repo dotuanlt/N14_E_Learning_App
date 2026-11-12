@@ -1,0 +1,62 @@
+# Chạy toàn bộ ứng dụng:   docker compose up --build -d
+# Mở trình duyệt:           http://localhost:3000
+# Cơ sở dữ liệu là Neon (cloud), cấu hình trong file .env (sao chép từ .env.example).
+
+name: e-learning
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]   # OTP chỉ cần lưu tạm trong RAM
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend/e-learning
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Các giá trị dưới đây ghi đè .env để chắc chắn dùng Redis trong compose
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_USERNAME: ""
+      REDIS_PASSWORD: ""
+      REDIS_SSL: "false"
+      OTP_MODE: redis
+      STORAGE_DIR: /data/uploads
+      # Cho phép dùng mã OTP demo 123456 để giáo viên đăng ký / quên mật khẩu mà không cần email
+      OTP_ALLOW_DEV_CODE: ${OTP_ALLOW_DEV_CODE:-true}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/api/v1/categories > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  frontend:
+    build:
+      context: ./frontend/e-learning
+      args:
+        EXPO_PUBLIC_API_URL: /api/v1
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  uploads:

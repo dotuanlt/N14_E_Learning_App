@@ -1,5 +1,6 @@
 import { apiClient, ENDPOINTS } from '@/api';
 import type { CartItem } from '@/types/cart';
+import type { CouponOption, OrderInfo, PaymentProvider, Quote } from '@/types/payment';
 
 const PASTEL_COLORS = ['#c9bcff', '#ffd6a3', '#b2eedf', '#ffbfd2', '#ffe8a3', '#d0e1fd'];
 
@@ -47,32 +48,38 @@ export const cartService = {
     return apiClient.post(ENDPOINTS.COUPONS.VALIDATE, { code, courseIds });
   },
 
-  async checkout(params: {
+  /** Báo giá chính thức từ server (không tin số tiền tính ở client). */
+  async quote(courseIds: string[], couponCode?: string): Promise<Quote> {
+    return apiClient.post<Quote>(ENDPOINTS.ORDERS.QUOTE, { courseIds, couponCode: couponCode || undefined });
+  },
+
+  /** Khuyến mãi đang chạy kèm khả năng áp dụng cho các khóa đã chọn. */
+  async availableCoupons(courseIds: string[]): Promise<CouponOption[]> {
+    const res = await apiClient.post<CouponOption[]>(ENDPOINTS.COUPONS.AVAILABLE, { courseIds });
+    return Array.isArray(res) ? res : [];
+  },
+
+  /** Tạo đơn (PENDING). Việc ghi nhận thanh toán chỉ xảy ra khi cổng xác nhận, không tự hoàn tất ở đây. */
+  async createOrder(params: {
     courseIds: string[];
-    method?: 'MOCK' | 'VNPAY';
+    provider: PaymentProvider;
     couponCode?: string;
-  }): Promise<{ orderCode: string; totalAmount: number; status: string; paymentUrl?: string }> {
-    const method = params.method || 'MOCK';
-    const order = await apiClient.post<any>(ENDPOINTS.ORDERS.CREATE, {
+  }): Promise<OrderInfo> {
+    return apiClient.post<OrderInfo>(ENDPOINTS.ORDERS.CREATE, {
       courseIds: params.courseIds,
-      method,
+      method: 'MOCK',
+      provider: params.provider.toUpperCase(),
       couponCode: params.couponCode || undefined,
     });
+  },
 
-    if (method === 'MOCK' && order?.orderCode) {
-      try {
-        await apiClient.post(ENDPOINTS.PAYMENTS.MOCK_COMPLETE(order.orderCode) + '?result=SUCCESS');
-      } catch (e) {
-        console.warn('Mock payment complete callback note:', e);
-      }
-    }
+  async getOrder(orderCode: string): Promise<OrderInfo> {
+    return apiClient.get<OrderInfo>(ENDPOINTS.ORDERS.DETAIL(orderCode));
+  },
 
-    return {
-      orderCode: order.orderCode,
-      totalAmount: Number(order.totalAmount || 0),
-      status: 'PAID',
-      paymentUrl: order.paymentUrl,
-    };
+  /** Giả lập phản hồi của ví / cổng thẻ: SUCCESS = xác nhận, FAILED = từ chối. */
+  async mockPay(orderCode: string, result: 'SUCCESS' | 'FAILED'): Promise<OrderInfo> {
+    return apiClient.post<OrderInfo>(`${ENDPOINTS.ORDERS.MOCK_PAY(orderCode)}?result=${result}`);
   },
 
   async getOrders(): Promise<

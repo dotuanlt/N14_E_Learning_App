@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Icon } from '@/components/ui/icon';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -19,7 +21,7 @@ export function LessonRow({ lesson, onPress }: Props) {
   // Xác định nhãn trạng thái bài học
   let statusText = '';
   if (isLocked) {
-    statusText = '🔒 Đã khóa';
+    statusText = 'Đã khóa';
   } else if (lesson.isPreview) {
     // Khóa học chưa mua: bài học xem thử hiển thị "Học thử miễn phí"
     statusText = 'Học thử miễn phí';
@@ -30,7 +32,7 @@ export function LessonRow({ lesson, onPress }: Props) {
   }
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`Bài ${lesson.index}: ${lesson.title}`}
       onPress={onPress}
@@ -49,9 +51,11 @@ export function LessonRow({ lesson, onPress }: Props) {
           { backgroundColor: isLocked ? theme.chipBackground : theme.primarySoft },
         ]}
       >
-        <Text style={[styles.badgeText, { color: isLocked ? theme.muted : theme.primary }]}>
-          {lesson.index}
-        </Text>
+        {isLocked ? (
+          <Icon name="lock" weight="fill" size={14} color={theme.muted} />
+        ) : (
+          <Text style={[styles.badgeText, { color: theme.primary }]}>{lesson.index}</Text>
+        )}
       </View>
       <View style={styles.body}>
         <Text
@@ -75,7 +79,7 @@ export function LessonRow({ lesson, onPress }: Props) {
           {statusText}
         </Text>
       ) : null}
-    </Pressable>
+    </PressableScale>
   );
 }
 

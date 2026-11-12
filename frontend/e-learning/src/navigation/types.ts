@@ -26,8 +26,18 @@ export type RootStackParamList = {
   InstructorProfile: { id: string };
   Chat: { courseId?: string; lessonId?: string; conversationId?: string; prompt?: string } | undefined;
   Cart: undefined;
-  Checkout: undefined;
-  CheckoutSuccess: undefined;
+  Checkout: { ids?: string; couponCode?: string } | undefined;
+  PaymentQr: {
+    orderCode: string;
+    provider: string;
+    /** Các khóa học trong đơn, cách nhau bởi dấu phẩy (để dọn giỏ sau khi thanh toán). */
+    ids?: string;
+    total: string;
+    paymentUrl?: string;
+    expiresAt?: string;
+    methodLabel?: string;
+  };
+  CheckoutSuccess: { orderId?: string; method?: string; total?: string } | undefined;
   Notifications: undefined;
   Settings: undefined;
   SearchFilter: undefined;

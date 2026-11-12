@@ -110,9 +110,12 @@ export const ENDPOINTS = {
     CREATE: '/orders',
     LIST: '/orders',
     DETAIL: (orderCode: string) => `/orders/${orderCode}`,
+    QUOTE: '/orders/quote',
+    MOCK_PAY: (orderCode: string) => `/orders/${orderCode}/mock-pay`,
   },
   COUPONS: {
     VALIDATE: '/coupons/validate',
+    AVAILABLE: '/coupons/available',
   },
   PAYMENTS: {
     MOCK_COMPLETE: (orderCode: string) => `/payments/mock/${orderCode}/complete`,

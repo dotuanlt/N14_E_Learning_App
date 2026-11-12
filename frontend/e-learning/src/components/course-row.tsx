@@ -1,4 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AddToCartButton } from '@/components/ui/add-to-cart-button';
+import { Icon } from '@/components/ui/icon';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { Radius, Spacing, FontSizes } from '@/constants/theme';
@@ -20,7 +23,7 @@ export function CourseRow({ course, onPress }: CourseRowProps) {
   const imageUri = course.image || (course as any).coverUri;
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={course.title}
@@ -46,11 +49,14 @@ export function CourseRow({ course, onPress }: CourseRowProps) {
         <Text numberOfLines={1} style={[styles.author, { color: theme.textSecondary }]}>
           {course.author}
         </Text>
-        <Text style={[styles.meta, { color: theme.primary }]}>
-          {`${formatVnd(course.price)} · ★ ${course.rating} · ${course.lessons} bài`}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+          <Text style={[styles.meta, { color: theme.primary }]}>{`${formatVnd(course.price)} ·`}</Text>
+          <Icon name="star" weight="fill" size={12} color={theme.star} />
+          <Text style={[styles.meta, { color: theme.primary }]}>{`${course.rating} · ${course.lessons} bài`}</Text>
+        </View>
       </View>
-    </Pressable>
+      <AddToCartButton variant="icon" course={{ id: course.id, title: course.title, author: course.author, price: course.price, image: imageUri, tint: course.tint }} />
+    </PressableScale>
   );
 }
 

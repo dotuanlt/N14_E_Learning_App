@@ -1,12 +1,16 @@
 import { useLocalSearchParams, useRouter } from '@/navigation/routerHook';
-import { useState, useEffect } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { notify } from '@/lib/notify';
 
 import { BenefitRow } from '@/components/course/benefit-row';
 import { ChapterSection } from '@/components/course/chapter-section';
 import { CourseMiniCard } from '@/components/course/course-mini-card';
 import { InstructorRow } from '@/components/course/instructor-row';
 import { PriceBar } from '@/components/course/price-bar';
+import { PriceCard } from '@/components/course/price-card';
+import { TwoColumn } from '@/components/ui/two-column';
+import { useResponsive } from '@/hooks/use-responsive';
 import { ReviewCard } from '@/components/course/review-card';
 import { CourseHero } from '@/components/ui/course-hero';
 import { SmartVideoPlayer } from '@/components/ui/smart-video-player';
@@ -17,6 +21,8 @@ import { SectionHeader } from '@/components/ui/section-header';
 import type { SegmentItem } from '@/components/ui/segmented-tabs';
 import { Radius, Spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useCourse } from '@/hooks/use-course';
+import { CourseSkeleton } from '@/components/course/course-skeleton';
 import {
   courseCurriculumHref,
   courseOverviewHref,
@@ -34,9 +40,9 @@ type ReviewFilter = 'all' | '5' | '4' | '3';
 
 const REVIEW_FILTERS: { key: ReviewFilter; label: string }[] = [
   { key: 'all', label: 'Tất cả' },
-  { key: '5', label: '★ 5' },
-  { key: '4', label: '★ 4' },
-  { key: '3', label: '★ 3' },
+  { key: '5', label: '5 sao' },
+  { key: '4', label: '4 sao' },
+  { key: '3', label: '3 sao' },
 ];
 
 export default function CourseOverviewScreen() {
@@ -45,38 +51,15 @@ export default function CourseOverviewScreen() {
   const theme = useAppTheme();
   const router = useRouter();
   const { addToCart } = useAppStore();
+  const { isWide, wideMax } = useResponsive();
 
   const [activeTab, setActiveTab] = useState<DetailTab>('overview');
-  const [courseData, setCourseData] = useState<CourseDetail | null>(null);
-  const [chaptersList, setChaptersList] = useState<Chapter[]>([]);
-  const [reviewsList, setReviewsList] = useState<Review[]>([]);
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('all');
   const [expanded, setExpanded] = useState(false);
   const [following, setFollowing] = useState(false);
   const [showIntroVideo, setShowIntroVideo] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const [detail, chaps, revs] = await Promise.all([
-          courseService.getCourseDetail(courseId),
-          courseService.getCurriculum(courseId),
-          courseService.getReviews(courseId),
-        ]);
-        if (mounted) {
-          if (detail) setCourseData(detail);
-          if (chaps && chaps.length > 0) setChaptersList(chaps);
-          if (revs && revs.length > 0) setReviewsList(revs);
-        }
-      } catch (err) {
-        console.warn('Load course detail error:', err);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [courseId]);
+  const { courseData, chaptersList, reviewsList, loading, error, refresh } = useCourse(courseId);
 
   const tabs: SegmentItem[] = [
     { key: 'overview', label: 'Tổng quan' },
@@ -102,49 +85,22 @@ export default function CourseOverviewScreen() {
         thumbnailLabel: courseData.category.slice(0, 3).toUpperCase(),
         image: courseData.coverImage,
       });
-      Alert.alert('Thành công', 'Đã thêm khóa học vào giỏ hàng!', [
-        { text: 'Xem giỏ hàng', onPress: () => router.push('/cart') },
-        { text: 'Ở lại trang', style: 'cancel' },
-      ]);
-    } catch {
-      router.push('/cart');
+      notify.toast({
+        type: 'success',
+        title: 'Đã thêm vào giỏ hàng',
+        message: courseData.title,
+        actionLabel: 'Xem giỏ hàng',
+        onAction: () => router.push('/cart'),
+      });
+    } catch (err: any) {
+      notify.error('Không thể thêm vào giỏ', err?.message || 'Vui lòng thử lại.');
     }
   };
 
-  return (
-    <Screen
-      footer={
-        courseData?.owned ? (
-          <PriceBar
-            price="Đã sở hữu"
-            discount=""
-            actionLabel="Vào học ngay"
-            onPress={() => router.push(coursePlayerHref(courseId))}
-          />
-        ) : (
-          <PriceBar
-            price={courseData?.price || '0 đ'}
-            discount={courseData?.discount || ''}
-            actionLabel="Thêm vào giỏ"
-            onPress={handleAddToCart}
-          />
-        )
-      }
-    >
-      <ScreenHeader title="Chi tiết khóa học" />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Hỏi trợ lý AI về khóa học này"
-        onPress={() => router.push({ pathname: '/chat', params: { courseId } })}
-        style={[styles.aiLink, { backgroundColor: theme.primarySoft, borderColor: theme.primaryBorder }]}>
-        <Image
-          source={require('../../assets/images/robot.png')}
-          style={styles.aiIcon}
-          resizeMode="contain"
-        />
-        <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>Hỏi trợ lý AI về khóa học này</Text>
-      </Pressable>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+  if (!courseData) return <CourseSkeleton error={!loading ? error : undefined} onRetry={refresh} />;
+
+  const mainContent = (
+    <>
         {showIntroVideo && courseData?.introVideoUrl ? (
           <View style={[styles.introCard, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
             <SmartVideoPlayer url={courseData.introVideoUrl} autoPlay height={210} />
@@ -268,7 +224,72 @@ export default function CourseOverviewScreen() {
             </View>
           </View>
         )}
-      </ScrollView>
+    </>
+  );
+
+  const owned = !!courseData?.owned;
+  const goAi = () => router.push({ pathname: '/chat', params: { courseId } });
+
+  if (isWide) {
+    return (
+      <Screen maxWidth={wideMax}>
+        <ScreenHeader title="Chi tiết khóa học" />
+        <TwoColumn
+          main={mainContent}
+          contentContainerStyle={styles.content}
+          aside={
+            <PriceCard
+              price={owned ? 'Đã sở hữu' : courseData?.price || '0 đ'}
+              discount={owned ? '' : courseData?.discount || ''}
+              actionLabel={owned ? 'Vào học ngay' : 'Thêm vào giỏ'}
+              onAction={owned ? () => router.push(coursePlayerHref(courseId)) : handleAddToCart}
+              onAskAi={goAi}
+              facts={[
+                { icon: 'video', label: 'Số bài học', value: String(courseData?.lessonCount || 0) },
+                { icon: 'star', label: 'Đánh giá', value: `${courseData?.rating || 5} (${courseData?.reviewCount || 0})` },
+                { icon: 'teacher', label: 'Giảng viên', value: courseData?.instructor?.name || '' },
+              ]}
+            />
+          }
+        />
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen
+      footer={
+        owned ? (
+          <PriceBar
+            price="Đã sở hữu"
+            discount=""
+            actionLabel="Vào học ngay"
+            onPress={() => router.push(coursePlayerHref(courseId))}
+          />
+        ) : (
+          <PriceBar
+            price={courseData?.price || '0 đ'}
+            discount={courseData?.discount || ''}
+            actionLabel="Thêm vào giỏ"
+            onPress={handleAddToCart}
+          />
+        )
+      }
+    >
+      <ScreenHeader title="Chi tiết khóa học" />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Hỏi trợ lý AI về khóa học này"
+        onPress={goAi}
+        style={[styles.aiLink, { backgroundColor: theme.primarySoft, borderColor: theme.primaryBorder }]}>
+        <Image
+          source={require('../../assets/images/robot.png')}
+          style={styles.aiIcon}
+          resizeMode="contain"
+        />
+        <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>Hỏi trợ lý AI về khóa học này</Text>
+      </Pressable>
+      <TwoColumn main={mainContent} aside={null} narrowAside="hidden" contentContainerStyle={styles.content} />
     </Screen>
   );
 }

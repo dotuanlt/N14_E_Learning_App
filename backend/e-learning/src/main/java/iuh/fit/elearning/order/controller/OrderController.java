@@ -4,6 +4,9 @@ import iuh.fit.elearning.auth.security.AuthUser;
 import iuh.fit.elearning.common.response.ApiResponse;
 import iuh.fit.elearning.common.response.PageResponse;
 import iuh.fit.elearning.order.dto.request.CreateOrderRequest;
+import iuh.fit.elearning.order.dto.request.QuoteRequest;
+import iuh.fit.elearning.order.dto.response.CouponOptionResponse;
+import iuh.fit.elearning.order.dto.response.QuoteResponse;
 import iuh.fit.elearning.order.dto.response.OrderResponse;
 import iuh.fit.elearning.order.service.OrderQuote;
 import iuh.fit.elearning.order.service.OrderService;
@@ -12,6 +15,7 @@ import iuh.fit.elearning.promotion.dto.response.CouponValidationResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +43,24 @@ public class OrderController {
         OrderQuote quote = orderService.quote(user.id(), request.courseIds(), request.code());
         return ApiResponse.ok(new CouponValidationResponse(quote.coupon().getCode(), quote.coupon().getDescription(),
                 quote.subtotal(), quote.discount(), quote.total()));
+    }
+
+    @PostMapping("/orders/quote")
+    public ApiResponse<QuoteResponse> quote(@AuthenticationPrincipal AuthUser user,
+                                            @Valid @RequestBody QuoteRequest request) {
+        return ApiResponse.ok(orderService.quoteForClient(user.id(), request));
+    }
+
+    @PostMapping("/coupons/available")
+    public ApiResponse<List<CouponOptionResponse>> availableCoupons(@AuthenticationPrincipal AuthUser user,
+                                                                    @Valid @RequestBody QuoteRequest request) {
+        return ApiResponse.ok(orderService.availableCoupons(user.id(), request));
+    }
+
+    @PostMapping("/orders/{orderCode}/mock-pay")
+    public ApiResponse<OrderResponse> mockPay(@AuthenticationPrincipal AuthUser user, @PathVariable String orderCode,
+                                              @RequestParam(defaultValue = "SUCCESS") String result) {
+        return ApiResponse.ok(orderService.mockPay(user.id(), orderCode, result));
     }
 
     @PostMapping("/orders")

@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Icon } from '@/components/ui/icon';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { FontSizes, Radius, Spacing } from '@/constants/theme';
 import type { Category } from '@/types';
@@ -27,7 +29,7 @@ export function CategoryChip({ category, variant = 'card', selected, onPress }: 
 
   if (variant === 'pill') {
     return (
-      <Pressable
+      <PressableScale haptic="selection"
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={category.label}
@@ -48,12 +50,12 @@ export function CategoryChip({ category, variant = 'card', selected, onPress }: 
         >
           {category.label}
         </Text>
-      </Pressable>
+      </PressableScale>
     );
   }
 
   return (
-    <Pressable
+    <PressableScale haptic="selection"
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={category.label}
@@ -63,12 +65,12 @@ export function CategoryChip({ category, variant = 'card', selected, onPress }: 
       ]}
     >
       <View style={[styles.iconCircle, { backgroundColor: `${category.color}66` }]}>
-        <Text style={styles.iconGlyph}>{glyph}</Text>
+        <Icon glyph={glyph} emoji={glyph} size={24} weight="fill" color={theme.text} />
       </View>
       <Text style={[styles.label, { color: theme.text }]} numberOfLines={1}>
         {category.label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

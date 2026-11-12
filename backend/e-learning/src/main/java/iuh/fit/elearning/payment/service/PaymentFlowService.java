@@ -48,21 +48,25 @@ public class PaymentFlowService {
         } else if (order.getStatus() != OrderStatus.PENDING) {
             note = "Đơn hàng đã hết hạn hoặc không còn chờ thanh toán.";
         }
+        String provider = paymentRepository.findFirstByOrderIdOrderByCreatedAtDesc(order.getId())
+                .map(Payment::provider).orElse(null);
         List<PaymentHtml.Line> lines = order.getItems().stream()
                 .map(i -> new PaymentHtml.Line(i.getCourseTitle(), i.getPrice())).toList();
-        return PaymentHtml.mockCheckout(order.getOrderCode(), order.getTotalAmount(), lines, note);
+        return PaymentHtml.mockCheckout(order.getOrderCode(), order.getTotalAmount(), lines, note, provider);
     }
 
     /** Giả lập kết quả cổng thanh toán; result = SUCCESS | FAILED. */
     @Transactional
     public String completeMock(String orderCode, String result) {
-        requireMockOrder(orderCode);
+        Order order = requireMockOrder(orderCode);
+        String provider = paymentRepository.findFirstByOrderIdOrderByCreatedAtDesc(order.getId())
+                .map(Payment::provider).orElse(null);
         boolean success = "SUCCESS".equalsIgnoreCase(result);
         if (!success && !"FAILED".equalsIgnoreCase(result)) {
             throw BusinessException.badRequest("result phải là SUCCESS hoặc FAILED");
         }
         PaymentOutcome outcome = paymentService.confirm(orderCode, success, "MOCK-" + orderCode, null,
-                "MOCK:" + result.toUpperCase());
+                Payment.tag("MOCK:" + result.toUpperCase(), provider));
         return renderResult(outcome, orderCode);
     }
 

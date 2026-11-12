@@ -1,3 +1,6 @@
+import { FadeIn } from '@/components/ui/fade-in';
+import { padToColumns, useResponsive } from '@/hooks/use-responsive';
+import { SkeletonList, } from '@/components/ui/skeleton';
 import { useLocalSearchParams, useRouter } from '@/navigation/routerHook';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
@@ -16,6 +19,7 @@ import type { Course } from '@/types/course';
 const PASTEL_COLORS = ['#c9bcff', '#ffd6a3', '#b2eedf', '#ffbfd2', '#ffe8a3', '#d0e1fd'];
 
 export default function SearchResultsScreen() {
+  const { columns, wideMax } = useResponsive();
   const theme = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -31,7 +35,7 @@ export default function SearchResultsScreen() {
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<Course[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const performSearch = async (keyword?: string) => {
     try {
@@ -78,16 +82,23 @@ export default function SearchResultsScreen() {
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]} edges={['top']}>
       <FlatList
-        data={results}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <CourseRow
-            course={item}
-            onPress={() => router.push(`/course/${item.id}` as any)}
-          />
-        )}
+        key={`cols-${columns}`}
+        data={padToColumns(results, columns)}
+        numColumns={columns}
+        columnWrapperStyle={columns > 1 ? { gap: Spacing.three } : undefined}
+        keyExtractor={(item, i) => (item ? item.id : `pad-${i}`)}
+        renderItem={({ item, index }) =>
+          item ? (
+            <FadeIn index={index} style={{ flex: 1 }}>
+              <CourseRow course={item} onPress={() => router.push(`/course/${item.id}` as any)} />
+            </FadeIn>
+          ) : (
+            <View style={{ flex: 1 }} />
+          )
+        }
+        ListEmptyComponent={loading ? <SkeletonList count={6} /> : undefined}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.list, { paddingBottom: BottomTabInset + 70 }]}
+        contentContainerStyle={[styles.list, { maxWidth: wideMax, paddingBottom: BottomTabInset + 70, gap: Spacing.three }]}
         ListHeaderComponent={
           <View style={styles.header}>
             <View style={styles.searchRow}>

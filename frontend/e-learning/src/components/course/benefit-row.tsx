@@ -1,3 +1,4 @@
+import { Icon } from '@/components/ui/icon';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
@@ -13,7 +14,7 @@ export function BenefitRow({ label }: Props) {
   return (
     <View style={styles.row}>
       <View style={[styles.dot, { backgroundColor: theme.primarySoft }]}>
-        <Text style={[styles.check, { color: theme.primary }]}>✓</Text>
+        <Icon name="check" weight="bold" size={13} color={theme.primary} />
       </View>
       <Text style={[styles.label, { color: theme.text }]}>{label}</Text>
     </View>

@@ -1,10 +1,5 @@
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
 
 import { FontSizes, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -41,7 +36,7 @@ export function PrimaryButton({
   const textColor = isPrimary ? theme.onPrimary : theme.primary;
 
   return (
-    <Pressable
+    <PressableScale haptic="light"
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       accessibilityLabel={accessibilityLabel ?? label}
@@ -59,7 +54,7 @@ export function PrimaryButton({
       <Text style={[styles.label, { color: textColor }]}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

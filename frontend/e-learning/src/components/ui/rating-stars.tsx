@@ -1,3 +1,4 @@
+import { Icon } from '@/components/ui/icon';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -13,7 +14,7 @@ export function RatingStars({ rating, count, size = 13, showValue = true }: Rati
 
   return (
     <View style={styles.row}>
-      <Text style={{ color: theme.accentDark, fontSize: size }}>★</Text>
+      <Icon name="star" weight="fill" size={size + 2} color={theme.star} />
       {showValue ? (
         <Text style={[styles.value, { color: theme.textSecondary, fontSize: size }]}>
           {rating.toFixed(1)}

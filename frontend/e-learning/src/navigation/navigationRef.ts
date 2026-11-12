@@ -28,3 +28,12 @@ export function goBack() {
     }
   }
 }
+
+/** Sau khi thanh toán xong: bỏ các màn thanh toán khỏi ngăn xếp để nút Back không quay lại trả tiền lần nữa. */
+export function resetToCheckoutSuccess(params: { orderId: string; method: string; total: string }) {
+  if (!navigationRef.isReady()) return;
+  navigationRef.reset({
+    index: 1,
+    routes: [{ name: 'MainTabs' }, { name: 'CheckoutSuccess', params }],
+  });
+}

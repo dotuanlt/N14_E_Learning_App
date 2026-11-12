@@ -11,6 +11,8 @@ public record CreateOrderRequest(
         @NotEmpty(message = "Danh sách khóa học không được để trống")
         List<UUID> courseIds,
         String couponCode,
-        PaymentMethod method
+        PaymentMethod method,
+        /** Nguồn tiền hiển thị: CARD | MOMO | ZALOPAY (cùng đi qua cổng MOCK). */
+        String provider
 ) {
 }

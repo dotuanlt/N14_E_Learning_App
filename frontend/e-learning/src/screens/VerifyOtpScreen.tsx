@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { notify } from '@/lib/notify';
 import { router, useLocalSearchParams } from '@/navigation/routerHook';
 
 import { ThemedText } from '@/components/themed-text';
@@ -43,7 +44,7 @@ export default function VerifyOtpScreen() {
 
   const handleVerify = async () => {
     if (!targetEmail) {
-      Alert.alert('Thiếu thông tin', 'Không tìm thấy email cần xác thực. Vui lòng đăng ký lại.', [
+      notify.alert('Thiếu thông tin', 'Không tìm thấy email cần xác thực. Vui lòng đăng ký lại.', [
         { text: 'Quay lại', onPress: () => router.replace('/register') },
       ]);
       return;
@@ -63,24 +64,14 @@ export default function VerifyOtpScreen() {
       setLoading(true);
       setOtpError(undefined);
       await authService.verifyOtp(targetEmail, trimmedOtp);
-      Alert.alert(
-        'Tạo tài khoản thành công',
-        'Tài khoản của bạn đã được xác thực qua email. Vui lòng đăng nhập để bắt đầu học!',
-        [
-          {
-            text: 'Đến trang đăng nhập',
-            onPress: () =>
-              router.replace({
-                pathname: '/login',
-                params: { email: targetEmail },
-              }),
-          },
-        ],
-      );
+      // Xác thực đúng -> sang thẳng màn đăng nhập (kèm thông báo thành công trên màn đó)
+      router.replace({
+        pathname: '/login',
+        params: { email: targetEmail, verified: '1' },
+      });
     } catch (err: any) {
       const msg = err?.message || 'Mã OTP không đúng hoặc đã hết hạn';
       setOtpError(msg);
-      Alert.alert('Xác thực thất bại', msg);
     } finally {
       setLoading(false);
     }
@@ -93,9 +84,9 @@ export default function VerifyOtpScreen() {
       setOtpError(undefined);
       const res = await authService.resendOtp(targetEmail, 'REGISTER');
       setCooldown(Math.max(1, res?.resendAfterSeconds || 60));
-      Alert.alert('Đã gửi lại mã OTP', `Mã OTP mới đã được gửi tới ${targetEmail}. Vui lòng kiểm tra hộp thư.`);
+      notify.alert('Đã gửi lại mã OTP', `Mã OTP mới đã được gửi tới ${targetEmail}. Vui lòng kiểm tra hộp thư.`);
     } catch (err: any) {
-      Alert.alert('Không thể gửi lại mã', err?.message || 'Vui lòng thử lại sau.');
+      notify.alert('Không thể gửi lại mã', err?.message || 'Vui lòng thử lại sau.');
     } finally {
       setResending(false);
     }
@@ -112,7 +103,7 @@ export default function VerifyOtpScreen() {
           Xác thực email
         </ThemedText>
         <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-          Chúng tôi đã gửi mã OTP gồm 6 chữ số tới{' '}
+          Mã OTP gồm 6 chữ số đang được gửi tới{' '}
           <Text style={[styles.emailHighlight, { color: theme.text }]}>
             {targetEmail || 'email của bạn'}
           </Text>

@@ -2,7 +2,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/ui/primary-button';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useResponsive } from '@/hooks/use-responsive';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
 export function PriceBar({ price, discount, actionLabel = 'Thêm vào giỏ', onPress }: Props) {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
+  const { contentMax } = useResponsive();
 
   return (
     <View
@@ -27,7 +29,7 @@ export function PriceBar({ price, discount, actionLabel = 'Thêm vào giỏ', on
         },
       ]}
     >
-      <View style={styles.inner}>
+      <View style={[styles.inner, { maxWidth: contentMax }]}>
         <View style={styles.priceBlock}>
           <Text style={[styles.price, { color: theme.text }]}>{price}</Text>
           <Text style={[styles.discount, { color: theme.textSecondary }]}>{discount}</Text>
@@ -46,7 +48,6 @@ const styles = StyleSheet.create({
   },
   inner: {
     width: '100%',
-    maxWidth: MaxContentWidth,
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',

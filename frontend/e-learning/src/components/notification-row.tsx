@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Icon } from '@/components/ui/icon';
 import { useTheme } from '@/hooks/use-theme';
@@ -13,7 +14,7 @@ interface Props {
 export function NotificationRow({ item, onPress }: Props) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={item.title}
@@ -28,7 +29,7 @@ export function NotificationRow({ item, onPress }: Props) {
         <ThemedText style={[styles.time, { color: theme.textSecondary }]}>{item.time}</ThemedText>
       </View>
       {item.unread ? <View style={[styles.dot, { backgroundColor: theme.primary }]} /> : null}
-    </Pressable>
+    </PressableScale>
   );
 }
 

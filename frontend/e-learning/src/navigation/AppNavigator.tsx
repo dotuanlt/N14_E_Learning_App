@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '@/hooks/use-theme';
 import { navigationRef } from './navigationRef';
+import { syncCurrentRoute } from './route-store';
 import type { RootStackParamList } from './types';
 
 // Tab Navigator
@@ -19,6 +20,7 @@ import ChatScreen from '@/screens/ChatScreen';
 import CartScreen from '@/screens/CartScreen';
 import CheckoutScreen from '@/screens/CheckoutScreen';
 import CheckoutSuccessScreen from '@/screens/CheckoutSuccessScreen';
+import PaymentQrScreen from '@/screens/PaymentQrScreen';
 import NotificationsScreen from '@/screens/NotificationsScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
 import SearchFilterScreen from '@/screens/SearchFilterScreen';
@@ -35,14 +37,14 @@ export function AppNavigator() {
   const theme = useTheme();
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer ref={navigationRef} onReady={syncCurrentRoute} onStateChange={syncCurrentRoute}>
       <Stack.Navigator
         initialRouteName="Welcome"
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: theme.background },
           animation: 'slide_from_right',
-          animationDuration: 220,
+          animationDuration: 260,
         }}
       >
         {/* Main 4 Tabs */}
@@ -63,10 +65,11 @@ export function AppNavigator() {
         {/* E-Commerce Flow */}
         <Stack.Screen name="Cart" component={CartScreen} />
         <Stack.Screen name="Checkout" component={CheckoutScreen} />
+        <Stack.Screen name="PaymentQr" component={PaymentQrScreen} options={{ gestureEnabled: false }} />
         <Stack.Screen name="CheckoutSuccess" component={CheckoutSuccessScreen} options={{ animation: 'fade' }} />
 
         {/* Other Features */}
-        <Stack.Screen name="Chat" component={ChatScreen} />
+        <Stack.Screen name="Chat" component={ChatScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="SearchFilter" component={SearchFilterScreen} options={{ presentation: 'transparentModal' }} />
@@ -74,8 +77,8 @@ export function AppNavigator() {
 
         {/* Auth Screens */}
         <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ animation: 'fade' }} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ animation: 'fade_from_bottom' }} />
+        <Stack.Screen name="Register" component={RegisterScreen} options={{ animation: 'fade_from_bottom' }} />
         <Stack.Screen name="VerifyOtp" component={VerifyOtpScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       </Stack.Navigator>

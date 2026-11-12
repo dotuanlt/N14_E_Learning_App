@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Icon } from '@/components/ui/icon';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { Card } from '@/components/ui/card';
@@ -22,7 +24,7 @@ export function CartItemRow({ item, onRemove, selected = true, onToggleSelect }:
   return (
     <Card style={styles.card}>
       {onToggleSelect ? (
-        <Pressable
+        <PressableScale
           accessibilityRole="checkbox"
           accessibilityState={{ checked: selected }}
           onPress={() => onToggleSelect(item.id)}
@@ -35,8 +37,8 @@ export function CartItemRow({ item, onRemove, selected = true, onToggleSelect }:
             },
           ]}
         >
-          {selected ? <Text style={styles.checkmark}>✓</Text> : null}
-        </Pressable>
+          {selected ? <Icon name="check" weight="bold" size={13} color="#ffffff" /> : null}
+        </PressableScale>
       ) : null}
 
       <View style={[styles.thumbnail, { backgroundColor: item.thumbnailColor }]}>
@@ -63,7 +65,7 @@ export function CartItemRow({ item, onRemove, selected = true, onToggleSelect }:
 
       <View style={styles.trailing}>
         <Text style={[styles.price, { color: theme.primary }]}>{formatVnd(item.price)}</Text>
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={`Xóa ${item.title} khỏi giỏ hàng`}
           hitSlop={8}
@@ -73,7 +75,7 @@ export function CartItemRow({ item, onRemove, selected = true, onToggleSelect }:
               Xóa
             </Text>
           )}
-        </Pressable>
+        </PressableScale>
       </View>
     </Card>
   );

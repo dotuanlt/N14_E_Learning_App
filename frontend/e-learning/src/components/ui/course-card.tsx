@@ -1,5 +1,7 @@
+import { Icon } from '@/components/ui/icon';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Image } from 'expo-image';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { FontSizes, Radius, Spacing } from '@/constants/theme';
 import type { Course } from '@/types';
@@ -18,7 +20,7 @@ export function CourseCard({ course, variant = 'vertical', onPress, onBookmark }
 
   if (variant === 'horizontal') {
     return (
-      <Pressable
+      <PressableScale
         onPress={onPress}
         accessibilityLabel={course.title}
         style={({ pressed }) => [
@@ -42,24 +44,26 @@ export function CourseCard({ course, variant = 'vertical', onPress, onBookmark }
           <Text numberOfLines={1} style={[styles.hAuthor, { color: theme.textSecondary }]}>
             {course.instructor}
           </Text>
-          <Text style={[styles.hMeta, { color: theme.primary }]}>
-            ${course.price} · ★ {course.rating} · {course.lessonCount} bài
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <Text style={[styles.hMeta, { color: theme.primary }]}>${course.price} ·</Text>
+            <Icon name="star" weight="fill" size={13} color={theme.star} />
+            <Text style={[styles.hMeta, { color: theme.primary }]}>{course.rating} · {course.lessonCount} bài</Text>
+          </View>
         </View>
-        <Pressable
+        <PressableScale
           onPress={onBookmark}
           accessibilityRole="button"
           accessibilityLabel="Lưu khóa học"
           style={[styles.bookmark, { backgroundColor: theme.backgroundSelected }]}
         >
-          <Text style={{ color: theme.primary, fontSize: 14 }}>🔖</Text>
-        </Pressable>
-      </Pressable>
+          <Icon name="bookmark" size={16} color={theme.primary} />
+        </PressableScale>
+      </PressableScale>
     );
   }
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={course.title}
@@ -87,7 +91,7 @@ export function CourseCard({ course, variant = 'vertical', onPress, onBookmark }
         </Text>
         <Text style={[styles.vPrice, { color: theme.primary }]}>${course.price}</Text>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { storage } from '@/storage';
+import { queryCache } from '@/api/cache';
 import { authService, cartService, savedCourseService, notificationService } from '@/services';
 import type { User, CartItem } from '@/types';
 
@@ -29,6 +30,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setUser = useCallback((nextUser: User | null) => {
     setUserState(nextUser);
     if (!nextUser) {
+      queryCache.clear();
       setSavedCourseIds([]);
       setUnreadCount(0);
     }
@@ -101,7 +103,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const courseId = item.courseId || item.id;
       await cartService.addToCart(courseId);
       await refreshCart();
-    } catch (err) {
+    } catch (err: any) {
+      // Lỗi nghiệp vụ thật (đã sở hữu, khóa không còn bán...) thì gỡ khỏi giỏ cục bộ và báo cho nơi gọi.
+      // Lỗi mạng / chưa đăng nhập vẫn giữ giỏ cục bộ như trước.
+      if (err?.code === 'ALREADY_OWNED' || err?.code === 'COURSE_NOT_AVAILABLE') {
+        const courseId = item.courseId || item.id;
+        setCart((prev: CartItem[]) => {
+          const updated = prev.filter((c: CartItem) => (c.courseId || c.id) !== courseId);
+          storage.setItem('app_cart', updated);
+          return updated;
+        });
+        throw err;
+      }
       console.warn('addToCart backend sync note:', err);
     }
   };

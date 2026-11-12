@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { FontSizes, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -56,13 +57,13 @@ export function SettingsRow({
         },
       ]}>
       {onPress ? (
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={label}
           onPress={onPress}
           style={({ pressed }) => [styles.row, { opacity: pressed ? 0.6 : 1 }]}>
           {content}
-        </Pressable>
+        </PressableScale>
       ) : (
         <View style={styles.row}>{content}</View>
       )}

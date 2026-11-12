@@ -20,6 +20,7 @@ public record OrderResponse(
         Instant paidAt,
         Instant createdAt,
         List<OrderItemResponse> items,
-        String paymentUrl
+        String paymentUrl,
+        String provider
 ) {
 }

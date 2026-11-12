@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/themed-text';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -14,7 +15,7 @@ interface Props {
 export function MyCourseCard({ course, onPress }: Props) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={course.title}
@@ -43,7 +44,7 @@ export function MyCourseCard({ course, onPress }: Props) {
           Hoàn thành {course.progress}%
         </ThemedText>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

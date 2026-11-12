@@ -186,4 +186,4 @@ export const Radius = {
 export const BottomTabInset =
   Platform.select({ ios: 84, android: 64, web: 72, default: 64 }) ?? 64;
 
-export const MaxContentWidth = 640;
+export const MaxContentWidth = 760;

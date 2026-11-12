@@ -1,3 +1,4 @@
+import { Skeleton, SkeletonList, SkeletonText } from '@/components/ui/skeleton';
 import { useLocalSearchParams, useRouter } from '@/navigation/routerHook';
 import { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -43,6 +44,7 @@ export default function InstructorProfileScreen() {
   const theme = useAppTheme();
   const router = useRouter();
   const [tab, setTab] = useState<string>('courses');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -65,7 +67,7 @@ export default function InstructorProfileScreen() {
                 id: c.id,
                 title: c.title,
                 author: detail.fullName || 'Giảng viên',
-                meta: `${Math.round((c.totalDurationSeconds || 0) / 60)} phút · ★ ${c.avgRating || 4.8}`,
+                meta: `${Math.round((c.totalDurationSeconds || 0) / 60)} phút · ${c.avgRating || 4.8} sao`,
                 tone: 'peach',
                 badge: c.bestSeller ? 'Bán chạy' : undefined,
                 image: c.thumbnailUrl || undefined,
@@ -91,12 +93,34 @@ export default function InstructorProfileScreen() {
         }
       } catch (err) {
         console.warn('Instructor profile load error:', err);
+      } finally {
+        if (mounted) setLoading(false);
       }
     })();
     return () => {
       mounted = false;
     };
   }, [instructorId]);
+
+  if (loading) {
+    return (
+      <Screen>
+        <ScreenHeader title="Hồ sơ giảng viên" />
+        <View style={styles.content}>
+          <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
+            <Skeleton width={72} height={72} radius={36} />
+            <View style={{ flex: 1, gap: 10 }}>
+              <Skeleton height={18} width="60%" />
+              <Skeleton height={12} width="80%" />
+            </View>
+          </View>
+          <Skeleton height={36} radius={18} />
+          <SkeletonText lines={4} />
+          <SkeletonList count={3} />
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>

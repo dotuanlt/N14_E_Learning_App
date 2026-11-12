@@ -14,7 +14,8 @@ final class PaymentHtml {
     record Line(String title, BigDecimal price) {
     }
 
-    static String mockCheckout(String orderCode, BigDecimal total, List<Line> lines, String statusNote) {
+    static String mockCheckout(String orderCode, BigDecimal total, List<Line> lines, String statusNote, String provider) {
+        String[] brand = brandOf(provider);
         StringBuilder items = new StringBuilder();
         for (Line l : lines) {
             items.append("<li><span>").append(esc(l.title())).append("</span><b>").append(money(l.price()))
@@ -23,13 +24,29 @@ final class PaymentHtml {
         String actions = statusNote != null
                 ? "<p class=\"note\">" + esc(statusNote) + "</p>"
                 : "<form method=\"post\" action=\"/api/v1/payments/mock/" + esc(orderCode)
-                + "/complete?result=SUCCESS\"><button class=\"ok\" type=\"submit\">Thanh toán thành công</button></form>"
+                + "/complete?result=SUCCESS\"><button class=\"ok\" type=\"submit\">Xác nhận thanh toán</button></form>"
                 + "<form method=\"post\" action=\"/api/v1/payments/mock/" + esc(orderCode)
-                + "/complete?result=FAILED\"><button class=\"bad\" type=\"submit\">Thanh toán thất bại</button></form>";
-        return page("Thanh toán giả lập",
-                "<h1>Thanh toán giả lập</h1><p class=\"muted\">Chỉ dùng cho phát triển - không thu tiền thật.</p>"
+                + "/complete?result=FAILED\"><button class=\"bad\" type=\"submit\">Từ chối</button></form>";
+        return page(brand[0],
+                "<div style=\"background:" + brand[1] + ";color:#fff;margin:-24px -24px 16px;padding:14px 24px;"
+                        + "border-radius:16px 16px 0 0;font-weight:700\">" + esc(brand[0]) + "</div>"
+                        + "<h1>Xác nhận thanh toán</h1><p class=\"muted\">Chỉ dùng cho đồ án - không thu tiền thật.</p>"
                         + "<p>Đơn hàng <b>" + esc(orderCode) + "</b></p><ul>" + items + "</ul>"
                         + "<p class=\"total\">Tổng thanh toán <b>" + money(total) + "</b></p>" + actions);
+    }
+
+    /** Tên hiển thị và màu nhận diện của nguồn tiền giả lập. */
+    private static String[] brandOf(String provider) {
+        if ("MOMO".equals(provider)) {
+            return new String[]{"Ví MoMo (giả lập)", "#a50064"};
+        }
+        if ("ZALOPAY".equals(provider)) {
+            return new String[]{"ZaloPay (giả lập)", "#0068ff"};
+        }
+        if ("CARD".equals(provider)) {
+            return new String[]{"Cổng thẻ ngân hàng (giả lập)", "#0f766e"};
+        }
+        return new String[]{"Thanh toán giả lập", "#4f46e5"};
     }
 
     static String result(boolean success, String orderCode, String message, String appRedirectUrl) {

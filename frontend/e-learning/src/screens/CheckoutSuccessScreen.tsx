@@ -1,3 +1,4 @@
+import { Icon } from '@/components/ui/icon';
 import { router, useLocalSearchParams } from '@/navigation/routerHook';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -43,7 +44,7 @@ export default function CheckoutSuccessScreen() {
       <View style={styles.inner}>
         <View style={[styles.badgeOuter, { backgroundColor: theme.primarySoft }]}>
           <View style={[styles.badgeInner, { backgroundColor: theme.primary }]}>
-            <Text style={styles.badgeGlyph}>✓</Text>
+            <Icon name="check" weight="bold" size={34} color="#ffffff" />
           </View>
         </View>
 

@@ -1,5 +1,4 @@
 import { useLocalSearchParams, useRouter } from '@/navigation/routerHook';
-import { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { ChapterSection } from '@/components/course/chapter-section';
@@ -16,7 +15,8 @@ import {
   coursePlayerHref,
   courseReviewsHref,
 } from '@/lib/routes';
-import { courseService } from '@/services/courseService';
+import { useCourse } from '@/hooks/use-course';
+import { CourseSkeleton } from '@/components/course/course-skeleton';
 import type { Chapter, CourseDetail } from '@/types';
 
 export default function CourseCurriculumScreen() {
@@ -24,35 +24,15 @@ export default function CourseCurriculumScreen() {
   const courseId = typeof id === 'string' && id.length > 0 ? id : '';
   const router = useRouter();
 
-  const [courseData, setCourseData] = useState<CourseDetail | null>(null);
-  const [chaptersList, setChaptersList] = useState<Chapter[]>([]);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const [detail, chaps] = await Promise.all([
-          courseService.getCourseDetail(courseId),
-          courseService.getCurriculum(courseId),
-        ]);
-        if (mounted) {
-          if (detail) setCourseData(detail);
-          if (chaps && chaps.length > 0) setChaptersList(chaps);
-        }
-      } catch (err) {
-        console.warn('Load curriculum error:', err);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [courseId]);
+  const { courseData, chaptersList, loading, error, refresh } = useCourse(courseId);
 
   const tabs: SegmentItem[] = [
     { key: 'overview', label: 'Tổng quan', href: courseOverviewHref(courseId) },
     { key: 'curriculum', label: 'Bài học', href: courseCurriculumHref(courseId) },
     { key: 'reviews', label: 'Đánh giá', href: courseReviewsHref(courseId) },
   ];
+
+  if (!courseData) return <CourseSkeleton error={!loading ? error : undefined} onRetry={refresh} />;
 
   return (
     <Screen

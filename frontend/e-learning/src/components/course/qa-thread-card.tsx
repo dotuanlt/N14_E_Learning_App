@@ -1,3 +1,4 @@
+import { Icon } from '@/components/ui/icon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/ui/avatar';
@@ -29,7 +30,10 @@ export function QaThreadCard({ thread, onPress }: Props) {
       </View>
       <Text style={[styles.body, { color: theme.textSecondary }]}>{thread.body}</Text>
       <View style={styles.footer}>
-        <Text style={[styles.meta, { color: theme.text }]}>♡ {thread.likes}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+          <Icon name="heart" size={15} color={theme.text} />
+          <Text style={[styles.meta, { color: theme.text }]}>{thread.likes}</Text>
+        </View>
         <Text style={[styles.meta, { color: theme.text }]}>{thread.comments} bình luận</Text>
       </View>
     </Pressable>

@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/ui/avatar';
 import { PrimaryButton } from '@/components/ui/primary-button';
@@ -20,7 +21,7 @@ export function InstructorRow({ instructor, following = false, onPress, onFollow
     <View
       style={[styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}
     >
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={`Xem hồ sơ giảng viên ${instructor.name}`}
         onPress={onPress}
@@ -31,7 +32,7 @@ export function InstructorRow({ instructor, following = false, onPress, onFollow
           <Text style={[styles.name, { color: theme.text }]}>{instructor.name}</Text>
           <Text style={[styles.role, { color: theme.textSecondary }]}>{instructor.role}</Text>
         </View>
-      </Pressable>
+      </PressableScale>
       <PrimaryButton
         label={following ? 'Đang theo dõi' : 'Theo dõi'}
         onPress={onFollow}

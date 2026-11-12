@@ -1,5 +1,6 @@
 package iuh.fit.elearning.user.service;
 
+import iuh.fit.elearning.auth.security.AuthUserCache;
 import iuh.fit.elearning.common.exception.BusinessException;
 import iuh.fit.elearning.common.exception.ErrorCode;
 import iuh.fit.elearning.common.response.PageResponse;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -36,15 +39,17 @@ public class AdminUserService {
     private final CourseRepository courseRepository;
     private final SessionService sessionService;
     private final StorageService storageService;
+    private final AuthUserCache authUserCache;
 
     public AdminUserService(UserRepository userRepository, InstructorProfileRepository instructorProfileRepository,
                             CourseRepository courseRepository, SessionService sessionService,
-                            StorageService storageService) {
+                            StorageService storageService, AuthUserCache authUserCache) {
         this.userRepository = userRepository;
         this.instructorProfileRepository = instructorProfileRepository;
         this.courseRepository = courseRepository;
         this.sessionService = sessionService;
         this.storageService = storageService;
+        this.authUserCache = authUserCache;
     }
 
     /** Lọc theo vai trò, trạng thái, tìm theo tên / email. Mặc định không hiển thị tài khoản đã xóa mềm. */
@@ -131,7 +136,22 @@ public class AdminUserService {
         if (user.getStatus() == UserStatus.DELETED) {
             throw BusinessException.notFound("Không tìm thấy người dùng");
         }
+        evictAuthCacheAfterCommit(userId);
         return user;
+    }
+
+    /** Sau khi giao dịch (khóa / đổi vai trò / xóa) commit xong, bỏ cache xác thực để thay đổi có hiệu lực ngay. */
+    private void evictAuthCacheAfterCommit(UUID userId) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    authUserCache.evict(userId);
+                }
+            });
+        } else {
+            authUserCache.evict(userId);
+        }
     }
 
     private AdminUserResponse toResponse(User u) {

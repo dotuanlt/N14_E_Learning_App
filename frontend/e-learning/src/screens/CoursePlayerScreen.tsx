@@ -1,6 +1,8 @@
+import { Icon } from '@/components/ui/icon';
 import { useLocalSearchParams, useRouter } from '@/navigation/routerHook';
 import { useState, useEffect } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { notify } from '@/lib/notify';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
@@ -22,6 +24,8 @@ import { Radius, Spacing } from '@/constants/theme';
 import { courseService } from '@/services/courseService';
 import { useAppStore } from '@/store';
 import { useAppTheme } from '@/hooks/use-app-theme';
+import { useResponsive } from '@/hooks/use-responsive';
+import { TwoColumn } from '@/components/ui/two-column';
 import type { CourseDetail } from '@/types';
 import type { Chapter, Project, ProjectFile, QaThread, Lesson } from '@/types/course';
 
@@ -57,6 +61,7 @@ export default function CoursePlayerScreen() {
   const router = useRouter();
   const theme = useAppTheme();
   const { user } = useAppStore();
+  const { isWide, wideMax } = useResponsive();
 
   const [activeTab, setActiveTab] = useState<PlayerTab>('lessons');
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
@@ -111,8 +116,8 @@ export default function CoursePlayerScreen() {
   const handleLessonPress = (lesson: Lesson) => {
     if (lesson.status === 'locked') {
       if (!user) {
-        Alert.alert(
-          'Bài học đã khóa 🔒',
+        notify.alert(
+          'Bài học đã khóa',
           'Đây là bài học nâng cao. Vui lòng đăng nhập và đăng ký khóa học để xem toàn bộ video bài giảng.',
           [
             { text: 'Để sau', style: 'cancel' },
@@ -120,8 +125,8 @@ export default function CoursePlayerScreen() {
           ]
         );
       } else {
-        Alert.alert(
-          'Bài học đã khóa 🔒',
+        notify.alert(
+          'Bài học đã khóa',
           'Khóa học này yêu cầu đăng ký để xem toàn bộ bài giảng.',
           [
             { text: 'Để sau', style: 'cancel' },
@@ -138,8 +143,8 @@ export default function CoursePlayerScreen() {
     setCurrentVideoUrl(targetUrl);
     setAutoPlay(true);
     if (lesson.isPreview) {
-      Alert.alert(
-        '▶ Đang phát bài học thử miễn phí',
+      notify.alert(
+        'Đang phát bài học thử miễn phí',
         `Bài ${lesson.index}: ${lesson.title}\n(Bài học xem thử miễn phí dành cho bạn)`
       );
     }
@@ -162,20 +167,20 @@ export default function CoursePlayerScreen() {
           tone: 'peach',
         };
         setProjectsList((prev) => [newProject, ...prev]);
-        Alert.alert(
-          'Tải lên thành công! 🎉',
+        notify.alert(
+          'Tải lên thành công!',
           `Đã tải lên tệp dự án: "${file.name}" thành công!`
         );
       }
     } catch (err: any) {
-      Alert.alert('Thông báo', 'Không thể chọn tệp: ' + (err?.message || 'Đã hủy'));
+      notify.alert('Thông báo', 'Không thể chọn tệp: ' + (err?.message || 'Đã hủy'));
     }
   };
 
   // Tải tài liệu về máy điện thoại
   const handleDownloadFile = async (file: ProjectFile) => {
     try {
-      Alert.alert('Đang tải tài liệu', `Đang chuẩn bị tải về: ${file.name}...`);
+      notify.alert('Đang tải tài liệu', `Đang chuẩn bị tải về: ${file.name}...`);
       const baseDir = FileSystem.cacheDirectory || FileSystem.documentDirectory || '';
       const localUri = `${baseDir}${file.name.replace(/\s+/g, '_')}`;
 
@@ -190,10 +195,10 @@ export default function CoursePlayerScreen() {
           dialogTitle: `Tải tài liệu: ${file.name}`,
         });
       } else {
-        Alert.alert('Thành công', `Đã lưu tài liệu: ${file.name} vào máy của bạn!`);
+        notify.alert('Thành công', `Đã lưu tài liệu: ${file.name} vào máy của bạn!`);
       }
     } catch (err: any) {
-      Alert.alert('Thành công', `Đã lưu tài liệu: ${file.name} vào bộ nhớ máy!`);
+      notify.alert('Thành công', `Đã lưu tài liệu: ${file.name} vào bộ nhớ máy!`);
     }
   };
 
@@ -214,67 +219,62 @@ export default function CoursePlayerScreen() {
       };
       setQaThreadsList((prev) => [newQa, ...prev]);
       setQuestionText('');
-      Alert.alert('Thành công', 'Câu hỏi của bạn đã được đăng lên mục thảo luận!');
+      notify.alert('Thành công', 'Câu hỏi của bạn đã được đăng lên mục thảo luận!');
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.message || 'Không thể gửi câu hỏi lúc này');
+      notify.alert('Lỗi', err?.message || 'Không thể gửi câu hỏi lúc này');
     } finally {
       setSubmittingQa(false);
     }
   };
 
-  return (
-    <Screen
-      footer={
-        activeTab === 'qa' ? (
-          <QuestionComposer
-            onChangeText={setQuestionText}
-            onSubmit={handleSubmitQa}
-            value={questionText}
-          />
-        ) : undefined
-      }
-    >
-      <ScreenHeader title={courseData?.shortTitle || courseData?.title || 'Đang xem khóa học'} />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Hỏi trợ lý AI về khóa học này"
-        onPress={() => router.push({ pathname: '/chat', params: { courseId: id, lessonId: activeLesson?.id } })}
-        style={[styles.aiLink, { backgroundColor: theme.primarySoft, borderColor: theme.primaryBorder }]}>
-        <Image
-          source={require('../../assets/images/robot.png')}
-          style={styles.aiIcon}
-          resizeMode="contain"
-        />
-        <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>Hỏi trợ lý AI về khóa học này</Text>
-      </Pressable>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+  // Màn rộng: danh sách bài giảng luôn nằm ở cột phải nên bỏ tab "Bài học".
+  const tab: PlayerTab = isWide && activeTab === 'lessons' ? 'projects' : activeTab;
+  const visibleTabs = isWide ? tabs.filter((t) => t.key !== 'lessons') : tabs;
+
+  const lessonsList = (
+    <View style={{ gap: Spacing.three }}>
+      <SectionHeader title={`Danh sách bài giảng (${chaptersList.length} chương)`} />
+      {chaptersList.map((chapter) => (
+        <ChapterSection key={chapter.id} chapter={chapter} onLessonPress={handleLessonPress} />
+      ))}
+    </View>
+  );
+
+  const goAi = () => router.push({ pathname: '/chat', params: { courseId: id, lessonId: activeLesson?.id } });
+
+  const mainContent = (
+    <>
         {/* Video Player view for active lesson */}
         {activeLesson ? (
           <View style={[styles.playerCard, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
             <SmartVideoPlayer
               url={currentVideoUrl}
               autoPlay={autoPlay}
-              height={210}
+              height={isWide ? 380 : 210}
             />
             <View style={styles.videoInfo}>
-              <Text style={[styles.videoTitle, { color: theme.text }]}>
-                ▶ Đang phát: Bài {activeLesson.index} - {activeLesson.title}
-              </Text>
-              <Text style={{ color: theme.primary, fontSize: 12, fontWeight: '700' }}>
-                ✓ Bài học thử miễn phí
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Icon name="play" weight="fill" size={14} color={theme.primary} />
+                <Text style={[styles.videoTitle, { color: theme.text, flex: 1 }]}>
+                  Đang phát: Bài {activeLesson.index} - {activeLesson.title}
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                <Icon name="checkCircle" weight="fill" size={14} color={theme.primary} />
+                <Text style={{ color: theme.primary, fontSize: 12, fontWeight: '700' }}>Bài học thử miễn phí</Text>
+              </View>
             </View>
           </View>
         ) : null}
 
         <CourseHero
-          activeTab={activeTab}
+          activeTab={tab}
           category={courseData?.category || 'Khóa học'}
           compact
           coverImage={courseData?.coverImage}
           footer={<CourseStats likes={courseData?.stats?.likes || 0} shares={courseData?.stats?.shares || 0} />}
           headline={courseData?.headline || ['Khóa học', 'Chuyên sâu']}
-          tabs={tabs}
+          tabs={visibleTabs}
           onPlayPress={() => {
             const firstLes = chaptersList[0]?.lessons[0];
             if (firstLes) handleLessonPress(firstLes);
@@ -284,22 +284,10 @@ export default function CoursePlayerScreen() {
           tone="ink"
         />
 
-        {/* Tab Bài học */}
-        {activeTab === 'lessons' && (
-          <View style={{ gap: Spacing.three }}>
-            <SectionHeader title={`Danh sách bài giảng (${chaptersList.length} chương)`} />
-            {chaptersList.map((chapter) => (
-              <ChapterSection
-                key={chapter.id}
-                chapter={chapter}
-                onLessonPress={handleLessonPress}
-              />
-            ))}
-          </View>
-        )}
+        {!isWide && tab === 'lessons' ? lessonsList : null}
 
         {/* Tab Dự án */}
-        {activeTab === 'projects' && (
+        {tab === 'projects' && (
           <>
             <SectionHeader title="Tải dự án của bạn" />
             <UploadCard onPress={handleUploadProject} />
@@ -328,7 +316,7 @@ export default function CoursePlayerScreen() {
         )}
 
         {/* Tab Hỏi đáp */}
-        {activeTab === 'qa' && (
+        {tab === 'qa' && (
           <View style={{ gap: Spacing.three, paddingBottom: Spacing.six }}>
             <SectionHeader title={`Thảo luận & Hỏi đáp (${qaThreadsList.length})`} />
             {qaThreadsList.map((thread) => (
@@ -336,7 +324,56 @@ export default function CoursePlayerScreen() {
             ))}
           </View>
         )}
-      </ScrollView>
+    </>
+  );
+
+  const footer =
+    tab === 'qa' ? (
+      <QuestionComposer onChangeText={setQuestionText} onSubmit={handleSubmitQa} value={questionText} />
+    ) : undefined;
+
+  if (isWide) {
+    return (
+      <Screen maxWidth={wideMax} footer={footer}>
+        <ScreenHeader title={courseData?.shortTitle || courseData?.title || 'Đang xem khóa học'} />
+        <TwoColumn
+          main={mainContent}
+          contentContainerStyle={styles.content}
+          asideWidth={380}
+          aside={
+            <>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Hỏi trợ lý AI về khóa học này"
+                onPress={goAi}
+                style={[styles.aiLink, { backgroundColor: theme.primarySoft, borderColor: theme.primaryBorder, marginBottom: 0 }]}>
+                <Image source={require('../../assets/images/robot.png')} style={styles.aiIcon} resizeMode="contain" />
+                <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>Hỏi trợ lý AI về khóa học này</Text>
+              </Pressable>
+              {lessonsList}
+            </>
+          }
+        />
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen footer={footer}>
+      <ScreenHeader title={courseData?.shortTitle || courseData?.title || 'Đang xem khóa học'} />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Hỏi trợ lý AI về khóa học này"
+        onPress={goAi}
+        style={[styles.aiLink, { backgroundColor: theme.primarySoft, borderColor: theme.primaryBorder }]}>
+        <Image
+          source={require('../../assets/images/robot.png')}
+          style={styles.aiIcon}
+          resizeMode="contain"
+        />
+        <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>Hỏi trợ lý AI về khóa học này</Text>
+      </Pressable>
+      <TwoColumn main={mainContent} aside={null} narrowAside="hidden" contentContainerStyle={styles.content} />
     </Screen>
   );
 }

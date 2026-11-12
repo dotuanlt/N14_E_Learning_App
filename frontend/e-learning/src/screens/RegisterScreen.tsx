@@ -1,6 +1,7 @@
 import { router } from '@/navigation/routerHook';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { notify } from '@/lib/notify';
 
 import { ThemedText } from '@/components/themed-text';
 import { AppButton } from '@/components/ui/app-button';
@@ -37,20 +38,26 @@ export default function RegisterScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(true);
   const [errors, setErrors] = useState<RegisterFormErrors>({});
+  const [formError, setFormError] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSubmit = async () => {
     const nextErrors: RegisterFormErrors = {};
     const normalizedEmail = email.trim().toLowerCase();
+    setFormError(undefined);
 
     if (name.trim().length === 0) {
       nextErrors.name = authValidationMessages.nameRequired;
+    } else if (name.trim().length > 150) {
+      nextErrors.name = 'Họ tên tối đa 150 ký tự.';
     }
     if (normalizedEmail.length === 0) {
       nextErrors.email = authValidationMessages.emailRequired;
     } else if (!isValidEmail(normalizedEmail)) {
       nextErrors.email = authValidationMessages.emailInvalid;
+    } else if (normalizedEmail.length > 255) {
+      nextErrors.email = 'Email tối đa 255 ký tự.';
     }
     if (password.length === 0) {
       nextErrors.password = authValidationMessages.passwordRequired;
@@ -79,6 +86,7 @@ export default function RegisterScreen() {
         confirmPassword,
         acceptedTerms,
       );
+      // Server đã kiểm tra dữ liệu xong và gửi email ở nền -> chuyển sang nhập OTP ngay.
       router.push({
         pathname: '/verify-otp',
         params: {
@@ -88,8 +96,13 @@ export default function RegisterScreen() {
         },
       });
     } catch (err: any) {
+      // Lỗi hiển thị ngay trên form đăng ký (không chuyển sang màn OTP).
       const msg = err?.message || 'Đăng ký không thành công, vui lòng thử lại';
-      Alert.alert('Lỗi đăng ký', msg);
+      if (err?.code === 'EMAIL_EXISTS') {
+        setErrors((current) => ({ ...current, email: msg }));
+      } else {
+        setFormError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -106,7 +119,7 @@ export default function RegisterScreen() {
       await refreshUserData();
       router.replace('/');
     } catch (err: any) {
-      Alert.alert('Đăng ký Google thất bại', err?.message || 'Không thể tiếp tục với Google lúc này.');
+      notify.alert('Đăng ký Google thất bại', err?.message || 'Không thể tiếp tục với Google lúc này.');
     } finally {
       setGoogleLoading(false);
     }
@@ -216,8 +229,16 @@ export default function RegisterScreen() {
           ) : null}
         </View>
 
+        {formError ? (
+          <View style={[styles.formError, { backgroundColor: theme.chipBackground, borderColor: theme.danger }]}>
+            <Text style={[styles.formErrorText, { color: theme.danger }]} accessibilityLiveRegion="polite">
+              {formError}
+            </Text>
+          </View>
+        ) : null}
+
         <AppButton
-          label={loading ? 'Đang gửi mã OTP...' : registerCopy.submit}
+          label={loading ? 'Đang kiểm tra thông tin...' : registerCopy.submit}
           onPress={handleSubmit}
           disabled={loading || googleLoading}
         />
@@ -243,6 +264,17 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
+  formError: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two + 2,
+  },
+  formErrorText: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '600',
+  },
   header: {
     alignItems: 'flex-start',
     marginBottom: Spacing.three,

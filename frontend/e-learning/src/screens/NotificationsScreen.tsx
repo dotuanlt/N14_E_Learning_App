@@ -1,3 +1,6 @@
+import { FadeIn } from '@/components/ui/fade-in';
+import { useResponsive } from '@/hooks/use-responsive';
+import { SkeletonList } from '@/components/ui/skeleton';
 import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,9 +21,11 @@ const filterLabels: { key: Filter; label: string }[] = [
 ];
 
 export default function NotificationsScreen() {
+  const { contentMax } = useResponsive();
   const theme = useTheme();
   const [filter, setFilter] = useState<Filter>('all');
   const [notifList, setNotifList] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const loadNotifications = async () => {
     try {
@@ -30,6 +35,8 @@ export default function NotificationsScreen() {
       }
     } catch (err) {
       console.warn('Load notifications error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,7 +62,7 @@ export default function NotificationsScreen() {
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
-        style={[styles.list, { maxWidth: MaxContentWidth }]}
+        style={[styles.list, { maxWidth: contentMax }]}
         contentContainerStyle={{
           paddingHorizontal: Spacing.four,
           paddingTop: Spacing.one,
@@ -92,8 +99,11 @@ export default function NotificationsScreen() {
             </View>
           </View>
         }
-        renderItem={({ item }) => (
-          <NotificationRow item={item} onPress={() => handleMarkRead(item)} />
+        ListEmptyComponent={loading ? <SkeletonList count={5} /> : undefined}
+        renderItem={({ item, index }) => (
+          <FadeIn index={index}>
+            <NotificationRow item={item} onPress={() => handleMarkRead(item)} />
+          </FadeIn>
         )}
       />
     </SafeAreaView>

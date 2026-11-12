@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { AddToCartButton } from '@/components/ui/add-to-cart-button';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/themed-text';
 import { Icon } from '@/components/ui/icon';
@@ -14,7 +16,7 @@ interface Props {
 export function FeaturedCourseCard({ course, onPress }: Props) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       accessibilityLabel={course.title}
       style={[styles.card, { backgroundColor: theme.surface }]}
@@ -32,14 +34,14 @@ export function FeaturedCourseCard({ course, onPress }: Props) {
             <View style={styles.thumbnailOverlay} />
           </>
         ) : null}
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel="Lưu khóa học"
           hitSlop={8}
           style={[styles.bookmark, { backgroundColor: 'rgba(255,255,255,0.9)' }]}
         >
           <Icon sf="bookmark.fill" emoji="🔖" size={15} color={theme.primary} />
-        </Pressable>
+        </PressableScale>
       </View>
       <View style={styles.body}>
         <ThemedText style={[styles.title, { color: theme.text }]} numberOfLines={2}>
@@ -49,8 +51,9 @@ export function FeaturedCourseCard({ course, onPress }: Props) {
           {course.author}
         </ThemedText>
         <ThemedText style={[styles.meta, { color: theme.primary }]}>{course.meta}</ThemedText>
+        <AddToCartButton course={{ id: course.id, title: course.title, author: course.author, price: course.priceNumber, image: course.image, tint: course.coverColor }} />
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

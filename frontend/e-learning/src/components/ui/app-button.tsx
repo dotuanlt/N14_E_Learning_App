@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -28,7 +29,7 @@ export function AppButton({
   const isPrimary = variant === 'primary';
 
   return (
-    <Pressable
+    <PressableScale haptic="light"
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
@@ -49,7 +50,7 @@ export function AppButton({
       <Text style={[styles.label, { color: isPrimary ? theme.onPrimary : theme.text }]} numberOfLines={1}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

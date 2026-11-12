@@ -1,3 +1,4 @@
+import { Icon } from '@/components/ui/icon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
@@ -18,7 +19,7 @@ export function UploadCard({ onPress }: Props) {
       style={[styles.card, { backgroundColor: theme.primarySoft, borderColor: theme.primaryMuted }]}
     >
       <View style={[styles.icon, { backgroundColor: theme.primary }]}>
-        <Text style={[styles.iconText, { color: theme.onPrimary }]}>↑</Text>
+        <Icon name="arrowUp" weight="bold" size={20} color={theme.onPrimary} />
       </View>
       <Text style={[styles.label, { color: theme.primary }]}>Tải dự án lên tại đây</Text>
     </Pressable>

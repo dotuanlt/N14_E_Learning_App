@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { FontSizes, Radius, Spacing } from '@/constants/theme';
 
@@ -73,7 +74,7 @@ export function Button({
   }
 
   return (
-    <Pressable
+    <PressableScale haptic="light"
       onPress={onPress}
       disabled={blocked}
       accessibilityRole="button"
@@ -102,7 +103,7 @@ export function Button({
           {rightIcon ? <View style={styles.iconRight}>{rightIcon}</View> : null}
         </View>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 

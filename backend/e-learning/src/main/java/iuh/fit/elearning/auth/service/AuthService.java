@@ -64,7 +64,9 @@ public class AuthService {
     // ------------------------------------------------------------------ UC001
 
     /**
-     * Tạo tài khoản PENDING và gửi OTP. Gửi email lỗi => rollback, không để lại tài khoản.
+     * Kiểm tra dữ liệu, tạo tài khoản PENDING và phát hành OTP; email được gửi ở nền nên API trả lời ngay.
+     * Lỗi dữ liệu (email trùng, mật khẩu yếu...) được trả về tức thì. Nếu gửi email lỗi, tài khoản vẫn ở PENDING
+     * và người dùng bấm "Gửi lại mã" (hoặc đăng ký lại cùng email) để nhận OTP mới.
      * Email đang PENDING (chưa xác thực) được phép đăng ký lại để cập nhật thông tin và nhận OTP mới.
      */
     @Transactional
@@ -100,7 +102,7 @@ public class AuthService {
         } catch (DataIntegrityViolationException e) {
             throw new BusinessException(ErrorCode.EMAIL_EXISTS);
         }
-        otpService.issue(OtpPurpose.REGISTER, email, user.getFullName());
+        otpService.issueDeferred(OtpPurpose.REGISTER, email, user.getFullName());
         return sentResponse(email);
     }
 

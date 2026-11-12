@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -13,7 +14,7 @@ export function Chip({ label, active = false, onPress }: ChipProps) {
   const theme = useTheme();
 
   return (
-    <Pressable
+    <PressableScale haptic="selection"
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -29,7 +30,7 @@ export function Chip({ label, active = false, onPress }: ChipProps) {
       <Text style={[styles.label, { color: active ? theme.onPrimary : theme.primary }]}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

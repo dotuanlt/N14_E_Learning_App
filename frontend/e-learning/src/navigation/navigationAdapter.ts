@@ -14,8 +14,9 @@ export function resolveRoute(href: string | { pathname: string; params?: any }):
   if (path === '/my-courses') return { screen: 'MainTabs', params: { screen: 'MyCourses' } };
   if (path === '/profile') return { screen: 'MainTabs', params: { screen: 'Profile' } };
   if (path === '/cart') return { screen: 'Cart' };
-  if (path === '/checkout') return { screen: 'Checkout' };
-  if (path === '/checkout-success') return { screen: 'CheckoutSuccess' };
+  if (path === '/checkout') return { screen: 'Checkout', params };
+  if (path === '/checkout-success') return { screen: 'CheckoutSuccess', params };
+  if (path === '/payment-qr') return { screen: 'PaymentQr', params };
   if (path === '/notifications') return { screen: 'Notifications' };
   if (path === '/chat') return { screen: 'Chat', params };
   if (path === '/settings') return { screen: 'Settings' };

@@ -95,4 +95,25 @@ class OtpServiceTest {
         // cooldown đã được hủy: lần gửi lại ngay không bị chặn bởi cooldown
         assertThrows(IllegalStateException.class, () -> svc.issue(OtpPurpose.REGISTER, EMAIL, "An"));
     }
+
+    @Test
+    void issueDeferredReturnsImmediatelyAndSendsMailInBackground() throws Exception {
+        service.issueDeferred(OtpPurpose.REGISTER, EMAIL, "An");
+        // email được gửi ở nền nên chờ tối đa 2 giây
+        verify(mailer, org.mockito.Mockito.timeout(2000)).send(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void issueDeferredRevokesCooldownWhenBackgroundSendFails() throws Exception {
+        EmailSender failing = mock(EmailSender.class);
+        org.mockito.Mockito.doThrow(new IllegalStateException("smtp down"))
+                .when(failing).send(anyString(), anyString(), anyString(), any());
+        OtpProperties props = new OtpProperties("memory", 6, Duration.ofMinutes(5), 3, Duration.ofSeconds(60));
+        OtpService svc = new OtpService(new InMemoryOtpStore(), props, failing);
+        svc.issueDeferred(OtpPurpose.REGISTER, EMAIL, "An"); // không ném lỗi: gửi mail chạy nền
+        verify(failing, org.mockito.Mockito.timeout(2000)).send(anyString(), anyString(), anyString(), any());
+        Thread.sleep(200); // chờ nhánh dọn OTP/cooldown chạy xong
+        // cooldown đã được nhả: yêu cầu lại ngay không bị chặn
+        assertDoesNotThrow(() -> svc.issueDeferred(OtpPurpose.REGISTER, EMAIL, "An"));
+    }
 }

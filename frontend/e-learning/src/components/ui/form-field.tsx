@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
@@ -44,9 +43,8 @@ export function FormField({
   editable = true,
 }: FormFieldProps) {
   const theme = useTheme();
-  const [focused, setFocused] = useState(false);
-
-  const borderColor = error ? theme.danger : focused && editable ? theme.primary : theme.border;
+  // Không đổi viền/nền khi focus: giữ nguyên giao diện ban đầu, chỉ đổi màu khi có lỗi.
+  const borderColor = error ? theme.danger : theme.border;
 
   return (
     <View style={[styles.wrapper, !editable && styles.wrapperDisabled]}>
@@ -67,8 +65,6 @@ export function FormField({
           placeholderTextColor={theme.placeholder}
           secureTextEntry={secureTextEntry}
           editable={editable}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
           style={[styles.input, { color: editable ? theme.text : theme.textSecondary }]}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
@@ -125,6 +121,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     paddingVertical: Spacing.three,
+    backgroundColor: 'transparent',
   },
   rightAction: {
     paddingLeft: Spacing.two,

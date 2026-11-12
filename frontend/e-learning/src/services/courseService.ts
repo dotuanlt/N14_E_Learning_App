@@ -1,3 +1,4 @@
+import { ACCENT_FALLBACKS, CATEGORY_ACCENT, CATEGORY_ART } from '@/constants/category-art';
 import { apiClient, ENDPOINTS } from '@/api';
 import type {
   CourseDetail,
@@ -18,12 +19,12 @@ const PASTEL_COLORS = ['#c9bcff', '#ffd6a3', '#b2eedf', '#ffbfd2', '#ffe8a3', '#
 const AVATAR_TONES: AvatarTone[] = ['pink', 'peach', 'mint', 'blue', 'yellow', 'gold', 'purple'];
 
 const CATEGORY_ICONS: Record<string, { icon: string; emoji: string }> = {
-  business: { icon: 'briefcase.fill', emoji: '💼' },
-  design: { icon: 'paintbrush.fill', emoji: '🎨' },
-  code: { icon: 'chevron.left.slash.chevron.right', emoji: '💻' },
-  writing: { icon: 'pencil', emoji: '✏️' },
+  business: { icon: 'business', emoji: '💼' },
+  design: { icon: 'design', emoji: '🎨' },
+  code: { icon: 'code', emoji: '💻' },
+  writing: { icon: 'writing', emoji: '✏️' },
   movie: { icon: 'film', emoji: '🎬' },
-  language: { icon: 'globe', emoji: '🌐' },
+  language: { icon: 'language', emoji: '🌐' },
 };
 
 function formatVnd(amount?: number | null): string {
@@ -70,6 +71,7 @@ export const courseService = {
           title: c.title,
           author: c.instructor?.fullName || 'Giảng viên',
           price: formatVnd(c.salePrice ?? c.originalPrice),
+          priceNumber: Number(c.salePrice ?? c.originalPrice ?? 0),
           coverColor: getColorForIndex(index),
           image: c.thumbnailUrl || undefined,
           badge: c.bestSeller ? 'Bán chạy' : undefined,
@@ -95,6 +97,7 @@ export const courseService = {
             title: c.title,
             author: c.instructor?.fullName || 'Giảng viên',
             meta: `${durationMin > 0 ? durationMin + ' phút' : ''} · ${c.level === 'BEGINNER' ? 'Cơ bản' : 'Nâng cao'}`,
+            priceNumber: Number(c.salePrice ?? c.originalPrice ?? 0),
             coverColor: getColorForIndex(index + 2),
             image: c.thumbnailUrl || undefined,
           };
@@ -114,17 +117,18 @@ export const courseService = {
       if (Array.isArray(items) && items.length > 0) {
         return items.map((cat: any, index: number) => {
           const slug = (cat.slug || '').toLowerCase();
-          const iconMeta = CATEGORY_ICONS[slug] || { icon: 'book.fill', emoji: '📚' };
+          const iconMeta = CATEGORY_ICONS[slug] || { icon: 'courses', emoji: '📚' };
+          const accent = CATEGORY_ACCENT[slug] || ACCENT_FALLBACKS[index % ACCENT_FALLBACKS.length];
           return {
             id: cat.id,
             title: cat.name,
             label: cat.name,
-            color: cat.color || getColorForIndex(index),
-            tint: cat.color || getColorForIndex(index),
+            color: accent,
+            tint: accent,
             icon: iconMeta.icon,
             glyph: iconMeta.emoji,
             emoji: iconMeta.emoji,
-            image: undefined,
+            image: cat.imageUrl || CATEGORY_ART[slug] || undefined,
           };
         });
       }
@@ -187,12 +191,17 @@ export const courseService = {
   // Fetch course detail by id or slug
   async getCourseDetail(idOrSlug: string): Promise<CourseDetail | null> {
     try {
+      // Gọi song song: nếu có UUID thì tải luôn "khóa học tương tự" cùng lúc, không chờ chi tiết xong.
+      const looksLikeId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+      const similarPromise = looksLikeId
+        ? apiClient.get<any[]>(ENDPOINTS.COURSES.SIMILAR(idOrSlug)).catch(() => null)
+        : null;
       const data = await apiClient.get<any>(ENDPOINTS.COURSES.DETAIL(idOrSlug));
       if (!data) return null;
 
       let related: RelatedCourse[] = [];
       try {
-        const sim = await apiClient.get<any[]>(ENDPOINTS.COURSES.SIMILAR(data.id || idOrSlug));
+        const sim = similarPromise ? await similarPromise : await apiClient.get<any[]>(ENDPOINTS.COURSES.SIMILAR(data.id || idOrSlug));
         if (Array.isArray(sim)) {
           related = sim.slice(0, 3).map((item, idx) => ({
             id: item.id,

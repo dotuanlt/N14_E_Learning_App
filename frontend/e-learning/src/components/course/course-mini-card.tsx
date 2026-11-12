@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { Radius, Spacing } from '@/constants/theme';
@@ -14,7 +15,7 @@ export function CourseMiniCard({ course, onPress }: Props) {
   const theme = useAppTheme();
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`Mở khoá học ${course.title}`}
       onPress={onPress}
@@ -46,7 +47,7 @@ export function CourseMiniCard({ course, onPress }: Props) {
           {course.meta}
         </Text>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

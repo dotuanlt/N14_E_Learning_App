@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { AddToCartButton } from '@/components/ui/add-to-cart-button';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
@@ -13,7 +15,7 @@ interface Props {
 export function PopularCourseCard({ course, onPress }: Props) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={course.title}
@@ -46,8 +48,9 @@ export function PopularCourseCard({ course, onPress }: Props) {
           {course.author}
         </ThemedText>
         <ThemedText style={[styles.price, { color: theme.primary }]}>{course.price}</ThemedText>
+        <AddToCartButton course={{ id: course.id, title: course.title, author: course.author, price: course.priceNumber, image: course.image, tint: course.coverColor }} />
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

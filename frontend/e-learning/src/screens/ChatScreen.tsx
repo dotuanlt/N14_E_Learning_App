@@ -18,8 +18,9 @@ import { ScreenHeader } from '@/components/ui/screen-header';
 import { FontSizes, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { RootStackParamList } from '@/navigation/types';
-import { chatService } from '@/services/chatService';
 import { useAppStore } from '@/store/AppContext';
+import { useChat } from '@/store/ChatContext';
+import { Icon } from '@/components/ui/icon';
 import type { ChatCourseCard, ChatMessage } from '@/types/chat';
 
 const MAX_LENGTH = 1000;
@@ -41,9 +42,6 @@ function formatVnd(amount: number): string {
   return `${Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}đ`;
 }
 
-let localId = 0;
-const nextLocalId = () => `local-${Date.now()}-${localId++}`;
-
 export default function ChatScreen() {
   const theme = useTheme();
   const navigation = useNavigation<any>();
@@ -54,28 +52,24 @@ export default function ChatScreen() {
   const lessonId = route.params?.lessonId;
   const initialPrompt = route.params?.prompt;
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [conversationId, setConversationId] = useState<string | undefined>(route.params?.conversationId);
+  const { messages, conversationId, sending, hydrating, send: sendMessage, newChat: resetChat, openConversation, markRead } = useChat();
   const [input, setInput] = useState('');
-  const [sending, setSending] = useState(false);
-  const [loading, setLoading] = useState(Boolean(route.params?.conversationId));
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const sentInitial = useRef(false);
+  const loading = hydrating && messages.length === 0;
 
   // Mở lại một cuộc trò chuyện cũ (nếu được truyền vào)
   useEffect(() => {
     const id = route.params?.conversationId;
-    if (!id || !user) return;
-    let alive = true;
-    chatService
-      .messages(id)
-      .then((list) => alive && setMessages(list))
-      .catch(() => alive && setConversationId(undefined))
-      .finally(() => alive && setLoading(false));
-    return () => {
-      alive = false;
-    };
+    if (!id || !user || id === conversationId) return;
+    openConversation(id).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route.params?.conversationId, user]);
+
+  // Đang ở màn hình chat nghĩa là đã xem hết tin nhắn mới
+  useEffect(() => {
+    markRead();
+  }, [messages.length, markRead]);
 
   const scrollToEnd = useCallback(() => {
     requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
@@ -83,38 +77,10 @@ export default function ChatScreen() {
 
   const send = useCallback(
     async (raw: string, opts?: { retry?: boolean }) => {
-      const text = raw.trim();
-      if (!text || sending) return;
-      setSending(true);
-      setMessages((prev) => {
-        // Khi thử lại: bỏ thông báo lỗi và không thêm lại câu hỏi
-        const base = opts?.retry ? prev.filter((m) => !m.error) : prev;
-        return opts?.retry
-          ? base
-          : [...base, { id: nextLocalId(), role: 'USER', content: text, courses: [] }];
-      });
+      await sendMessage(raw, { courseId, lessonId, retry: opts?.retry });
       scrollToEnd();
-      try {
-        const res = await chatService.send({ message: text, conversationId, courseId, lessonId });
-        setConversationId(res.conversationId);
-        setMessages((prev) => [...prev, res.reply]);
-      } catch (e: any) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: nextLocalId(),
-            role: 'ASSISTANT',
-            content: e?.message || 'Không gửi được tin nhắn. Vui lòng thử lại.',
-            courses: [],
-            error: true,
-          },
-        ]);
-      } finally {
-        setSending(false);
-        scrollToEnd();
-      }
     },
-    [sending, conversationId, courseId, lessonId, scrollToEnd],
+    [sendMessage, courseId, lessonId, scrollToEnd],
   );
 
   // Gửi sẵn câu hỏi được truyền từ màn hình khác
@@ -122,8 +88,9 @@ export default function ChatScreen() {
     if (initialPrompt && user && !sentInitial.current && !route.params?.conversationId) {
       sentInitial.current = true;
       send(initialPrompt);
+      navigation.setParams({ prompt: undefined });
     }
-  }, [initialPrompt, user, route.params?.conversationId, send]);
+  }, [initialPrompt, user, route.params?.conversationId, send, navigation]);
 
   const lastUserText = [...messages].reverse().find((m) => m.role === 'USER')?.content;
 
@@ -136,8 +103,7 @@ export default function ChatScreen() {
 
   const newChat = () => {
     if (sending) return;
-    setMessages([]);
-    setConversationId(undefined);
+    resetChat();
     navigation.setParams({ conversationId: undefined, prompt: undefined });
   };
 
@@ -238,7 +204,7 @@ export default function ChatScreen() {
               hitSlop={8}
               disabled={sending || messages.length === 0}
               style={{ opacity: sending || messages.length === 0 ? 0.4 : 1 }}>
-              <Text style={{ color: theme.primary, fontWeight: '700', fontSize: FontSizes.base }}>Mới</Text>
+              <Icon name="plus" weight="bold" size={22} color={theme.primary} />
             </Pressable>
           </View>
 
@@ -321,7 +287,7 @@ export default function ChatScreen() {
                 styles.sendBtn,
                 { backgroundColor: theme.primary, opacity: sending || !input.trim() ? 0.4 : 1 },
               ]}>
-              <Text style={{ color: theme.onPrimary, fontSize: 18, fontWeight: '700' }}>↑</Text>
+              <Icon name="arrowUp" weight="bold" size={20} color={theme.onPrimary} />
             </Pressable>
           </View>
         </View>
@@ -361,7 +327,7 @@ function CourseCard({ course, onPress }: { course: ChatCourseCard; onPress: () =
           </Text>
           {course.rating > 0 ? (
             <Text style={{ color: theme.muted, fontSize: FontSizes.xs }}>
-              ★ {course.rating.toFixed(1)} ({course.reviewCount})
+              {course.rating.toFixed(1)} ({course.reviewCount})
             </Text>
           ) : null}
         </View>

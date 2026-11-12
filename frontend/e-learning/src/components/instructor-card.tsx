@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
@@ -22,7 +23,7 @@ function getInitials(name: string): string {
 export function InstructorCard({ instructor, onPress }: Props) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={instructor.name}
@@ -54,7 +55,7 @@ export function InstructorCard({ instructor, onPress }: Props) {
       <ThemedText style={[styles.rating, { color: theme.textSecondary }]}>
         {instructor.rating}
       </ThemedText>
-    </Pressable>
+    </PressableScale>
   );
 }
 

@@ -1,6 +1,9 @@
+import { FadeIn } from '@/components/ui/fade-in';
+import { padToColumns, useResponsive } from '@/hooks/use-responsive';
+import { SkeletonList } from '@/components/ui/skeleton';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@/navigation/routerHook';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 
@@ -18,20 +21,24 @@ import type { SavedCourse } from '@/types/course';
 type ProfileTab = 'saved' | 'certificates' | 'bio';
 
 export default function ProfileScreen() {
+  const { columns, wideMax, isWide, width } = useResponsive();
   const router = useRouter();
   const theme = useTheme();
   const { user, cart } = useAppStore();
   const [activeTab, setActiveTab] = useState<ProfileTab>('saved');
   const [savedList, setSavedList] = useState<SavedCourse[]>([]);
   const [certList, setCertList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(Boolean(user));
 
   useEffect(() => {
     if (!user) {
       setSavedList([]);
       setCertList([]);
+      setLoading(false);
       return;
     }
     let mounted = true;
+    setLoading(true);
     (async () => {
       try {
         const [saved, certs] = await Promise.all([
@@ -47,13 +54,15 @@ export default function ProfileScreen() {
                 title: c.courseTitle,
                 issuer: 'Học viện E-Learning',
                 date: c.issuedAt ? new Date(c.issuedAt).toLocaleDateString('vi-VN') : '10/2026',
-                icon: '🎓',
+                icon: 'certificate',
               })),
             );
           }
         }
       } catch (err) {
         console.warn('Profile screen loading error:', err);
+      } finally {
+        if (mounted) setLoading(false);
       }
     })();
     return () => {
@@ -85,21 +94,8 @@ export default function ProfileScreen() {
     { label: 'Hoàn thành', value: profile.stats.completed, route: '/my-courses' },
   ];
 
-  return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
-      <FlatList
-        data={activeTab === 'saved' ? savedList : []}
-        keyExtractor={(item) => item.id}
-        style={[styles.list, { maxWidth: MaxContentWidth }]}
-        contentContainerStyle={{
-          paddingHorizontal: Spacing.four,
-          paddingTop: Spacing.three,
-          paddingBottom: BottomTabInset + 70,
-          gap: Spacing.three,
-        }}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <View style={{ gap: Spacing.four, marginBottom: Spacing.two }}>
+  const topBarNode = (
+    <>
             {/* Top Navigation */}
             <View style={styles.topBar}>
               <ThemedText style={[styles.h1, { color: theme.text }]} accessibilityRole="header">
@@ -130,6 +126,10 @@ export default function ProfileScreen() {
               </View>
             </View>
 
+    </>
+  );
+  const cardNode = (
+    <>
             {/* Profile Hero Card */}
             <View style={[styles.profileCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <View style={styles.avatarContainer}>
@@ -147,15 +147,18 @@ export default function ProfileScreen() {
                   </View>
                 )}
                 <View style={[styles.verifiedBadge, { backgroundColor: theme.primary }]}>
-                  <Text style={styles.verifiedGlyph}>✓</Text>
+                  <Icon name="check" weight="bold" size={12} color="#ffffff" />
                 </View>
               </View>
 
               <ThemedText style={[styles.name, { color: theme.text }]}>{profile.name}</ThemedText>
               <ThemedText style={[styles.role, { color: theme.primary }]}>{profile.role}</ThemedText>
-              <ThemedText style={[styles.location, { color: theme.textSecondary }]}>
-                📍 {profile.location} · {profile.level}
-              </ThemedText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Icon name="pin" size={14} color={theme.textSecondary} />
+                <ThemedText style={[styles.location, { color: theme.textSecondary }]}>
+                  {profile.location} · {profile.level}
+                </ThemedText>
+              </View>
 
               {!user && (
                 <Pressable
@@ -188,6 +191,10 @@ export default function ProfileScreen() {
               </View>
             </View>
 
+    </>
+  );
+  const restNode = (
+    <>
             {/* Tab Filter Segment */}
             <View style={[styles.tabSegment, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <Pressable
@@ -245,12 +252,14 @@ export default function ProfileScreen() {
             {/* Content for Non-Saved Tabs */}
             {activeTab === 'certificates' ? (
               <View style={styles.sectionBlock}>
-                {certList.map((cert) => (
+                {loading ? <SkeletonList count={2} /> : certList.map((cert) => (
                   <View
                     key={cert.id}
                     style={[styles.certCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
                   >
-                    <Text style={styles.certIcon}>{cert.icon}</Text>
+                    <View style={[styles.certIconWrap, { backgroundColor: theme.primarySoft }]}>
+                      <Icon name={cert.icon} weight="fill" size={26} color={theme.primary} />
+                    </View>
                     <View style={styles.certBody}>
                       <Text style={[styles.certTitle, { color: theme.text }]}>{cert.title}</Text>
                       <Text style={[styles.certIssuer, { color: theme.textSecondary }]}>
@@ -281,22 +290,88 @@ export default function ProfileScreen() {
                 </View>
               </View>
             ) : null}
+    </>
+  );
+
+  const renderCourse = ({ item, index }: { item: SavedCourse | null; index: number }) =>
+    item ? (
+      <FadeIn index={index} style={{ flex: 1 }}>
+        <SavedCourseCard course={item} onPress={() => router.push(`/course/${item.id}` as any)} />
+      </FadeIn>
+    ) : (
+      <View style={{ flex: 1 }} />
+    );
+
+  if (isWide) {
+    // Màn rộng: thẻ hồ sơ cố định bên trái, tab + nội dung + lưới khóa học bên phải.
+    const wideCols = width - PROFILE_ASIDE - Spacing.four * 3 >= 640 ? 2 : 1;
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
+        <View style={[styles.wideRoot, { maxWidth: wideMax }]}>
+          <View style={{ gap: Spacing.four }}>{topBarNode}</View>
+          <View style={styles.wideRow}>
+            <ScrollView
+              style={{ width: PROFILE_ASIDE, flexGrow: 0, flexShrink: 0 }}
+              contentContainerStyle={{ paddingBottom: Spacing.five }}
+              showsVerticalScrollIndicator={false}>
+              {cardNode}
+            </ScrollView>
+            <FlatList
+              key={`wide-cols-${wideCols}`}
+              data={padToColumns(activeTab === 'saved' ? savedList : [], wideCols)}
+              numColumns={wideCols}
+              columnWrapperStyle={wideCols > 1 ? { gap: Spacing.three } : undefined}
+              keyExtractor={(item, i) => (item ? item.id : `pad-${i}`)}
+              style={{ flex: 1, minWidth: 0 }}
+              contentContainerStyle={{ paddingBottom: Spacing.five, gap: Spacing.three }}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={loading && activeTab === 'saved' ? <SkeletonList count={3} /> : undefined}
+              ListHeaderComponent={<View style={{ gap: Spacing.four, marginBottom: Spacing.two }}>{restNode}</View>}
+              renderItem={renderCourse}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top']}>
+      <FlatList
+        key={`cols-${columns}`}
+        data={padToColumns(activeTab === 'saved' ? savedList : [], columns)}
+        numColumns={columns}
+        columnWrapperStyle={columns > 1 ? { gap: Spacing.three } : undefined}
+        keyExtractor={(item, i) => (item ? item.id : `pad-${i}`)}
+        style={[styles.list, { maxWidth: wideMax }]}
+        contentContainerStyle={{
+          paddingHorizontal: Spacing.four,
+          paddingTop: Spacing.three,
+          paddingBottom: BottomTabInset + 70,
+          gap: Spacing.three,
+        }}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={loading && activeTab === 'saved' ? <SkeletonList count={3} /> : undefined}
+        ListHeaderComponent={
+          <View style={{ gap: Spacing.four, marginBottom: Spacing.two }}>
+            {topBarNode}
+            {cardNode}
+            {restNode}
           </View>
         }
-        renderItem={({ item }) => (
-          <SavedCourseCard
-            course={item}
-            onPress={() => router.push(`/course/${item.id}` as any)}
-          />
-        )}
+        renderItem={renderCourse}
       />
       <BottomNavBar currentTab="profile" />
     </SafeAreaView>
   );
 }
 
+const PROFILE_ASIDE = 340;
+
 const styles = StyleSheet.create({
   safe: { flex: 1 },
+  wideRoot: { flex: 1, width: '100%', alignSelf: 'center', paddingHorizontal: Spacing.four, paddingTop: Spacing.three, gap: Spacing.three },
+  wideRow: { flex: 1, flexDirection: 'row', gap: Spacing.four },
   list: { width: '100%', alignSelf: 'center' },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   h1: { fontSize: FontSizes.xl, fontWeight: '700' },
@@ -405,7 +480,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: Spacing.three,
   },
-  certIcon: { fontSize: 28 },
+  certIconWrap: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   certBody: { flex: 1, gap: 2 },
   certTitle: { fontSize: FontSizes.sm, fontWeight: '700' },
   certIssuer: { fontSize: FontSizes.xs },

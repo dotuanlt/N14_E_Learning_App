@@ -111,6 +111,7 @@ export interface PopularCourse {
   title: string;
   author: string;
   price: string;
+  priceNumber?: number;
   coverColor: string;
   image?: string;
   badge?: string;
@@ -121,6 +122,7 @@ export interface FeaturedCourse {
   title: string;
   author: string;
   meta: string;
+  priceNumber?: number;
   coverColor: string;
   image?: string;
 }

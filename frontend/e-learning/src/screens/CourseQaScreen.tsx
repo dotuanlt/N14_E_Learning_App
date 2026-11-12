@@ -1,6 +1,8 @@
+import { Skeleton, SkeletonList, SkeletonText } from '@/components/ui/skeleton';
 import { useLocalSearchParams, useRouter } from '@/navigation/routerHook';
 import { useState, useEffect } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { notify } from '@/lib/notify';
 
 import { CourseStats } from '@/components/course/course-stats';
 import { QaThreadCard } from '@/components/course/qa-thread-card';
@@ -26,6 +28,7 @@ export default function CourseQaScreen() {
   const [courseData, setCourseData] = useState<CourseDetail | null>(null);
   const [threads, setThreads] = useState<QaThread[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
 
   const loadData = async () => {
     try {
@@ -37,6 +40,8 @@ export default function CourseQaScreen() {
       if (qas && qas.length > 0) setThreads(qas);
     } catch (err) {
       console.warn('Load QA data error:', err);
+    } finally {
+      setLoadingData(false);
     }
   };
 
@@ -50,10 +55,10 @@ export default function CourseQaScreen() {
       setSubmitting(true);
       await courseService.addQaPost(courseId, question.trim());
       setQuestion('');
-      Alert.alert('Thành công', 'Câu hỏi của bạn đã được gửi tới giảng viên!');
+      notify.alert('Thành công', 'Câu hỏi của bạn đã được gửi tới giảng viên!');
       await loadData();
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.message || 'Không thể gửi câu hỏi lúc này. Vui lòng đăng nhập.');
+      notify.alert('Lỗi', err?.message || 'Không thể gửi câu hỏi lúc này. Vui lòng đăng nhập.');
     } finally {
       setSubmitting(false);
     }
@@ -90,9 +95,16 @@ export default function CourseQaScreen() {
         />
 
         <View style={styles.threads}>
-          {threads.map((thread) => (
-            <QaThreadCard key={thread.id} thread={thread} />
-          ))}
+          {loadingData ? (
+            <SkeletonList count={3}>
+              <View style={{ gap: 8 }}>
+                <Skeleton height={14} width="40%" />
+                <SkeletonText lines={2} />
+              </View>
+            </SkeletonList>
+          ) : (
+            threads.map((thread) => <QaThreadCard key={thread.id} thread={thread} />)
+          )}
         </View>
       </ScrollView>
     </Screen>

@@ -1,5 +1,6 @@
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { useRouter } from '@/navigation/routerHook';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { Spacing } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -26,7 +27,7 @@ export function SegmentedTabs({ items, activeKey, onSelect }: Props) {
         const active = item.key === activeKey;
 
         return (
-          <Pressable
+          <PressableScale haptic="selection"
             key={item.key}
             accessibilityRole="tab"
             accessibilityLabel={item.label}
@@ -51,7 +52,7 @@ export function SegmentedTabs({ items, activeKey, onSelect }: Props) {
                 { backgroundColor: active ? theme.primary : 'transparent' },
               ]}
             />
-          </Pressable>
+          </PressableScale>
         );
       })}
     </View>

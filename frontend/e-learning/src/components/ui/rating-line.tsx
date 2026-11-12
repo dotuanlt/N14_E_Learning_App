@@ -1,4 +1,5 @@
-import { StyleSheet, Text } from 'react-native';
+import { Icon } from '@/components/ui/icon';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { useAppTheme } from '@/hooks/use-app-theme';
 
@@ -20,11 +21,13 @@ export function RatingLine({ rating, reviewCount, lessonCount, fontSize = 13 }: 
     .join(' · ');
 
   return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+    <Icon name="star" weight="fill" size={fontSize + 2} color={theme.star} />
     <Text style={[styles.text, { color: theme.textSecondary, fontSize }]}>
-      <Text style={{ color: theme.star }}>★ </Text>
       {rating.toFixed(1)}
       {suffix ? ` ${suffix}` : ''}
     </Text>
+    </View>
   );
 }
 

@@ -1,3 +1,6 @@
+import { HRow } from '@/components/ui/h-row';
+import { useResponsive } from '@/hooks/use-responsive';
+import { Skeleton, SkeletonCourseCard } from '@/components/ui/skeleton';
 import { useRouter } from '@/navigation/routerHook';
 import { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -19,10 +22,12 @@ import type { Course } from '@/types/course';
 export default function SearchScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { wideMax } = useResponsive();
   const [query, setQuery] = useState('');
   const [categoriesList, setCategoriesList] = useState<Category[]>([]);
   const [topicsList, setTopicsList] = useState<{ id: string; label: string }[]>([]);
   const [recommendedList, setRecommendedList] = useState<Course[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -54,6 +59,8 @@ export default function SearchScreen() {
         }
       } catch (err) {
         console.warn('Search screen data load error:', err);
+      } finally {
+        if (mounted) setLoaded(true);
       }
     })();
     return () => {
@@ -67,7 +74,7 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { maxWidth: wideMax }]}>
         <View style={styles.searchRow}>
           <SearchInput
             value={query}
@@ -80,7 +87,7 @@ export default function SearchScreen() {
         <View style={styles.section}>
           <SectionHeader title="Chủ đề nổi bật" />
           <View style={styles.chips}>
-            {topicsList.map((topic) => (
+            {!loaded ? TOPIC_SKELETONS : topicsList.map((topic) => (
               <Chip key={topic.id} label={topic.label} onPress={() => openResults(topic.label)} />
             ))}
           </View>
@@ -92,11 +99,8 @@ export default function SearchScreen() {
             actionLabel="Xem thêm"
             onAction={() => router.push({ pathname: '/search/results', params: { title: 'Tất cả khóa học' } })}
           />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalRow}>
-            {categoriesList.map((category) => (
+          <HRow ready={loaded}>
+            {!loaded ? CATEGORY_SKELETONS : categoriesList.map((category) => (
               <CategoryCard
                 key={category.id}
                 category={category}
@@ -112,7 +116,7 @@ export default function SearchScreen() {
                 }
               />
             ))}
-          </ScrollView>
+          </HRow>
         </View>
 
         <View style={styles.section}>
@@ -126,24 +130,25 @@ export default function SearchScreen() {
               })
             }
           />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalRow}>
-            {recommendedList.map((course) => (
+          <HRow ready={loaded}>
+            {!loaded ? CARD_SKELETONS : recommendedList.map((course) => (
               <CourseCard
                 key={course.id}
                 course={course}
                 onPress={() => router.push(`/course/${course.id}` as any)}
               />
             ))}
-          </ScrollView>
+          </HRow>
         </View>
       </ScrollView>
       <BottomNavBar currentTab="search" />
     </SafeAreaView>
   );
 }
+
+const TOPIC_SKELETONS = [88, 110, 72, 96, 80].map((w, i) => <Skeleton key={`t${i}`} width={w} height={34} radius={17} />);
+const CATEGORY_SKELETONS = [0, 1, 2, 3].map((i) => <Skeleton key={`c${i}`} width={132} height={156} radius={24} />);
+const CARD_SKELETONS = [0, 1, 2].map((i) => <SkeletonCourseCard key={`k${i}`} width={220} />);
 
 const styles = StyleSheet.create({
   screen: {

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from '@/navigation/routerHook';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PriceBar } from '@/components/course/price-bar';
@@ -17,16 +17,17 @@ import {
   coursePlayerHref,
   courseReviewsHref,
 } from '@/lib/routes';
-import { courseService } from '@/services/courseService';
+import { useCourse } from '@/hooks/use-course';
+import { CourseSkeleton } from '@/components/course/course-skeleton';
 import type { Review, CourseDetail } from '@/types/course';
 
 type ReviewFilter = 'all' | '5' | '4' | '3';
 
 const FILTERS: { key: ReviewFilter; label: string }[] = [
   { key: 'all', label: 'Tất cả' },
-  { key: '5', label: '★ 5' },
-  { key: '4', label: '★ 4' },
-  { key: '3', label: '★ 3' },
+  { key: '5', label: '5 sao' },
+  { key: '4', label: '4 sao' },
+  { key: '3', label: '3 sao' },
 ];
 
 export default function CourseReviewsScreen() {
@@ -35,29 +36,7 @@ export default function CourseReviewsScreen() {
   const router = useRouter();
   const theme = useAppTheme();
   const [filter, setFilter] = useState<ReviewFilter>('all');
-  const [courseData, setCourseData] = useState<CourseDetail | null>(null);
-  const [reviewsList, setReviewsList] = useState<Review[]>([]);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const [detail, revs] = await Promise.all([
-          courseService.getCourseDetail(courseId),
-          courseService.getReviews(courseId),
-        ]);
-        if (mounted) {
-          if (detail) setCourseData(detail);
-          if (revs && revs.length > 0) setReviewsList(revs);
-        }
-      } catch (err) {
-        console.warn('Load reviews error:', err);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [courseId]);
+  const { courseData, reviewsList, loading, error, refresh } = useCourse(courseId);
 
   const tabs: SegmentItem[] = [
     { key: 'overview', label: 'Tổng quan', href: courseOverviewHref(courseId) },
@@ -69,6 +48,8 @@ export default function CourseReviewsScreen() {
     filter === 'all'
       ? reviewsList
       : reviewsList.filter((review) => String(Math.round(review.rating)) === filter);
+
+  if (!courseData) return <CourseSkeleton error={!loading ? error : undefined} onRetry={refresh} />;
 
   return (
     <Screen

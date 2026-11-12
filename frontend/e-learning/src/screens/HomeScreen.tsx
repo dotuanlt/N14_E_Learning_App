@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from '@/navigation/routerHook';
-import { Pressable, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -12,6 +12,10 @@ import { FeaturedCourseCard } from '@/components/featured-course-card';
 import { InstructorCard } from '@/components/instructor-card';
 import { BottomNavBar } from '@/components/bottom-bar';
 import { useTheme } from '@/hooks/use-theme';
+import { useQuery } from '@/hooks/use-query';
+import { Skeleton, SkeletonCourseCard } from '@/components/ui/skeleton';
+import { HRow } from '@/components/ui/h-row';
+import { useResponsive } from '@/hooks/use-responsive';
 import { BottomTabInset, FontSizes, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 
 import { courseService } from '@/services/courseService';
@@ -20,50 +24,48 @@ import type { Category } from '@/types/category';
 import type { PopularCourse, FeaturedCourse } from '@/types/course';
 import type { Instructor } from '@/types/instructor';
 
+const CATEGORY_SKELETONS = [0, 1, 2, 3].map((i) => <Skeleton key={`c${i}`} width={132} height={156} radius={24} />);
+const CARD_SKELETONS = [0, 1, 2, 3].map((i) => <SkeletonCourseCard key={`k${i}`} width={220} />);
+const INSTRUCTOR_SKELETONS = [0, 1, 2, 3].map((i) => (
+  <View key={`i${i}`} style={{ alignItems: 'center', gap: 8, width: 96 }}>
+    <Skeleton width={72} height={72} radius={36} />
+    <Skeleton width={70} height={12} />
+  </View>
+));
+
 export default function HomeScreen() {
   const router = useRouter();
   const theme = useTheme();
+  const { wideMax, gutter, cardWidth } = useResponsive();
   const { user, unreadCount, cart } = useAppStore();
   const [bannerPressed, setBannerPressed] = useState(false);
 
-  const [categoriesList, setCategoriesList] = useState<Category[]>([]);
-  const [popularList, setPopularList] = useState<PopularCourse[]>([]);
-  const [forYouList, setForYouList] = useState<FeaturedCourse[]>([]);
-  const [instructorsList, setInstructorsList] = useState<Instructor[]>([]);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const [cats, pop, fy, ins] = await Promise.all([
-          courseService.getCategories(),
-          courseService.getPopularCourses(),
-          courseService.getForYouCourses(),
-          courseService.getInstructors(),
-        ]);
-        if (mounted) {
-          if (cats && cats.length > 0) setCategoriesList(cats);
-          if (pop && pop.length > 0) setPopularList(pop);
-          if (fy && fy.length > 0) setForYouList(fy);
-          if (ins && ins.length > 0) setInstructorsList(ins);
-        }
-      } catch (err) {
-        console.warn('HomeScreen data loading error:', err);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const uid = user?.id ? String(user.id) : 'guest';
+  const cats = useQuery<Category[]>('home:categories', () => courseService.getCategories(), { staleMs: 10 * 60_000 });
+  const pop = useQuery<PopularCourse[]>('home:popular', () => courseService.getPopularCourses(), { staleMs: 2 * 60_000 });
+  const fy = useQuery<FeaturedCourse[]>(`home:foryou:${uid}`, () => courseService.getForYouCourses(), { staleMs: 2 * 60_000 });
+  const ins = useQuery<Instructor[]>('home:instructors', () => courseService.getInstructors(), { staleMs: 10 * 60_000 });
+  const categoriesList = cats.data ?? [];
+  const popularList = pop.data ?? [];
+  const forYouList = fy.data ?? [];
+  const instructorsList = ins.data ?? [];
+  const refreshing = cats.refreshing || pop.refreshing || fy.refreshing || ins.refreshing;
+  const onRefresh = () => {
+    cats.refresh();
+    pop.refresh();
+    fy.refresh();
+    ins.refresh();
+  };
 
   const greetingName = user?.name ? user.name.split(' ').pop() : 'bạn';
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.chipBackground }]} edges={['top']}>
       <ScrollView
-        style={[styles.scroll, { maxWidth: MaxContentWidth }]}
+        style={[styles.scroll, { maxWidth: wideMax }]}
         contentContainerStyle={{ paddingTop: Spacing.three, paddingBottom: BottomTabInset + 60 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -160,12 +162,8 @@ export default function HomeScreen() {
           title="Danh mục"
           onActionPress={() => router.push('/search')}
         />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalRow}
-        >
-          {categoriesList.map((c) => (
+        <HRow ready={cats.data !== undefined}>
+          {cats.data === undefined ? CATEGORY_SKELETONS : categoriesList.map((c) => (
             <CategoryCard
               key={c.id}
               category={c}
@@ -177,7 +175,7 @@ export default function HomeScreen() {
               }
             />
           ))}
-        </ScrollView>
+        </HRow>
 
         {/* Popular */}
         <SectionHeader
@@ -189,19 +187,15 @@ export default function HomeScreen() {
             })
           }
         />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalRow}
-        >
-          {popularList.map((c) => (
+        <HRow ready={pop.data !== undefined}>
+          {pop.data === undefined ? CARD_SKELETONS : popularList.map((c) => (
             <PopularCourseCard
               key={c.id}
               course={c}
               onPress={() => router.push(`/course/${c.id}` as any)}
             />
           ))}
-        </ScrollView>
+        </HRow>
 
         {/* For you */}
         <SectionHeader
@@ -213,19 +207,15 @@ export default function HomeScreen() {
             })
           }
         />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalRow}
-        >
-          {forYouList.map((c) => (
+        <HRow ready={fy.data !== undefined}>
+          {fy.data === undefined ? CARD_SKELETONS : forYouList.map((c) => (
             <FeaturedCourseCard
               key={c.id}
               course={c}
               onPress={() => router.push(`/course/${c.id}` as any)}
             />
           ))}
-        </ScrollView>
+        </HRow>
 
         {/* Inspiration */}
         <SectionHeader
@@ -237,38 +227,30 @@ export default function HomeScreen() {
             })
           }
         />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalRow}
-        >
-          {forYouList.map((c) => (
+        <HRow ready={fy.data !== undefined}>
+          {fy.data === undefined ? CARD_SKELETONS : forYouList.map((c) => (
             <FeaturedCourseCard
               key={`inspire-${c.id}`}
               course={c}
               onPress={() => router.push(`/course/${c.id}` as any)}
             />
           ))}
-        </ScrollView>
+        </HRow>
 
         {/* Instructors */}
         <SectionHeader
           title="Giảng viên hàng đầu"
           onActionPress={() => router.push('/search')}
         />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.horizontalRow}
-        >
-          {instructorsList.map((i) => (
+        <HRow ready={ins.data !== undefined}>
+          {ins.data === undefined ? INSTRUCTOR_SKELETONS : instructorsList.map((i) => (
             <InstructorCard
               key={i.id}
               instructor={i}
               onPress={() => router.push(`/instructor/${i.id}` as any)}
             />
           ))}
-        </ScrollView>
+        </HRow>
       </ScrollView>
 
       {/* Bottom Navigation */}

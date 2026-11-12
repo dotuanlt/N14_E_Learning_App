@@ -1,3 +1,4 @@
+import { Icon } from '@/components/ui/icon';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Avatar } from '@/components/ui/avatar';
@@ -22,7 +23,10 @@ export function ReviewCard({ review }: Props) {
           <Text style={[styles.name, { color: theme.text }]}>{review.author}</Text>
           <Text style={[styles.time, { color: theme.textSecondary }]}>{review.timeAgo}</Text>
         </View>
-        <Text style={[styles.rating, { color: theme.star }]}>★ {review.rating.toFixed(1)}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Icon name="star" weight="fill" size={14} color={theme.star} />
+          <Text style={[styles.rating, { color: theme.star }]}>{review.rating.toFixed(1)}</Text>
+        </View>
       </View>
       <Text style={[styles.body, { color: theme.textSecondary }]}>{review.body}</Text>
     </View>

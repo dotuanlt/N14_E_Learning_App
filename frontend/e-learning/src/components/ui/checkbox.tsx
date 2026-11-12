@@ -1,3 +1,4 @@
+import { Icon } from '@/components/ui/icon';
 import { SymbolView } from 'expo-symbols';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -37,7 +38,7 @@ export function Checkbox({ checked, onCheckedChange, accessibilityLabel, childre
             size={13}
             weight="bold"
             tintColor={theme.onPrimary}
-            fallback={<Text style={[styles.fallback, { color: theme.onPrimary }]}>✓</Text>}
+            fallback={<Icon name="check" weight="bold" size={13} color={theme.onPrimary} />}
           />
         ) : null}
       </Pressable>

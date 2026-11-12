@@ -64,7 +64,8 @@ public class PromotionService {
      * Kiểm tra mã theo SDS 7.8.1: is_active, start_at ≤ now ≤ end_at, subtotal ≥ min_order_value,
      * used_count < usage_limit. Ném COUPON_INVALID kèm lý do.
      */
-    @Transactional(readOnly = true)
+    // noRollbackFor: lỗi mã sai là kết quả nghiệp vụ bình thường, không được đánh dấu rollback-only giao dịch cha
+    @Transactional(readOnly = true, noRollbackFor = BusinessException.class)
     public CouponApplication evaluate(String code, BigDecimal subtotal) {
         if (code == null || code.isBlank()) {
             throw new BusinessException(ErrorCode.COUPON_INVALID, "Vui lòng nhập mã giảm giá");
@@ -89,6 +90,19 @@ public class PromotionService {
                     "Đơn hàng chưa đạt giá trị tối thiểu " + coupon.getMinOrderValue().toBigInteger() + "đ để dùng mã");
         }
         return new CouponApplication(coupon, discountOf(coupon, subtotal));
+    }
+
+    /** Mã đang hoạt động, trong thời gian áp dụng và còn lượt (chưa xét giá trị đơn tối thiểu). */
+    @Transactional(readOnly = true)
+    public List<Coupon> findUsableCoupons() {
+        Instant now = Instant.now();
+        return couponRepository.findAll().stream()
+                .filter(c -> Boolean.TRUE.equals(c.getActive()))
+                .filter(c -> c.getStartAt() == null || !now.isBefore(c.getStartAt()))
+                .filter(c -> c.getEndAt() == null || !now.isAfter(c.getEndAt()))
+                .filter(c -> c.getUsageLimit() == null || c.getUsedCount() < c.getUsageLimit())
+                .sorted((a, b) -> a.getCode().compareToIgnoreCase(b.getCode()))
+                .toList();
     }
 
     /** PERCENTAGE: min(subtotal × value / 100, max_discount_amount); FIXED_AMOUNT: min(value, subtotal). */

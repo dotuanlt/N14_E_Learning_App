@@ -1,5 +1,6 @@
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { SymbolView } from 'expo-symbols';
-import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -14,7 +15,7 @@ export function BackButton({ onPress, accessibilityLabel = 'Quay lại', style }
   const theme = useTheme();
 
   return (
-    <Pressable
+    <PressableScale haptic="selection"
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
@@ -36,7 +37,7 @@ export function BackButton({ onPress, accessibilityLabel = 'Quay lại', style }
         tintColor={theme.text}
         fallback={<Text style={[styles.fallback, { color: theme.text }]}>‹</Text>}
       />
-    </Pressable>
+    </PressableScale>
   );
 }
 

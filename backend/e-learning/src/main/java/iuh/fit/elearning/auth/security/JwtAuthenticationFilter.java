@@ -4,9 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import iuh.fit.elearning.common.exception.ErrorCode;
-import iuh.fit.elearning.user.entity.User;
 import iuh.fit.elearning.user.entity.enums.UserStatus;
-import iuh.fit.elearning.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,11 +31,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String ERROR_ATTRIBUTE = "auth.error.code";
 
     private final JwtService jwtService;
-    private final UserRepository userRepository;
+    private final AuthUserCache userCache;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserRepository userRepository) {
+    public JwtAuthenticationFilter(JwtService jwtService, AuthUserCache userCache) {
         this.jwtService = jwtService;
-        this.userRepository = userRepository;
+        this.userCache = userCache;
     }
 
     @Override
@@ -49,15 +47,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 Claims claims = jwtService.parse(token);
                 UUID userId = UUID.fromString(claims.getSubject());
-                User user = userRepository.findById(userId).orElse(null);
+                AuthUserCache.Snapshot user = userCache.find(userId).orElse(null);
                 if (user == null) {
                     request.setAttribute(ERROR_ATTRIBUTE, ErrorCode.UNAUTHORIZED);
-                } else if (user.getStatus() != UserStatus.ACTIVE) {
+                } else if (user.status() != UserStatus.ACTIVE) {
                     request.setAttribute(ERROR_ATTRIBUTE, ErrorCode.ACCOUNT_LOCKED);
                 } else {
-                    AuthUser principal = new AuthUser(user.getId(), user.getEmail(), user.getRole());
+                    AuthUser principal = new AuthUser(user.id(), user.email(), user.role());
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            principal, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+                            principal, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.role().name())));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (ExpiredJwtException e) {

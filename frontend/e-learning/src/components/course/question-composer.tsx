@@ -1,7 +1,9 @@
+import { Icon } from '@/components/ui/icon';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useResponsive } from '@/hooks/use-responsive';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
 type Props = {
@@ -13,6 +15,7 @@ type Props = {
 export function QuestionComposer({ value, onChangeText, onSubmit }: Props) {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
+  const { contentMax } = useResponsive();
   const disabled = value.trim().length === 0;
 
   return (
@@ -26,7 +29,7 @@ export function QuestionComposer({ value, onChangeText, onSubmit }: Props) {
         },
       ]}
     >
-      <View style={styles.inner}>
+      <View style={[styles.inner, { maxWidth: contentMax }]}>
         <TextInput
           accessibilityLabel="Viết câu hỏi"
           multiline
@@ -47,9 +50,7 @@ export function QuestionComposer({ value, onChangeText, onSubmit }: Props) {
           onPress={onSubmit}
           style={[styles.send, { backgroundColor: disabled ? theme.primarySoft : theme.primary }]}
         >
-          <Text style={[styles.sendIcon, { color: disabled ? theme.primaryMuted : theme.onPrimary }]}>
-            ➤
-          </Text>
+          <Icon name="send" weight="fill" size={18} color={disabled ? theme.primaryMuted : theme.onPrimary} />
         </Pressable>
       </View>
     </View>
@@ -64,7 +65,6 @@ const styles = StyleSheet.create({
   },
   inner: {
     width: '100%',
-    maxWidth: MaxContentWidth,
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'flex-end',

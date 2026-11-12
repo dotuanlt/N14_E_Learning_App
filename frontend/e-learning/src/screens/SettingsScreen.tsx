@@ -1,6 +1,6 @@
+import { Icon } from '@/components/ui/icon';
 import {
   ActivityIndicator,
-  Alert,
   Appearance,
   Modal,
   Pressable,
@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { notify } from '@/lib/notify';
 import { useCallback, useState } from 'react';
 import { useRouter } from '@/navigation/routerHook';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -95,7 +96,7 @@ export default function SettingsScreen() {
   const displayInitials = user ? (user.initials || user.name.slice(0, 2).toUpperCase()) : 'K';
 
   const requireLoginPrompt = (featureName: string) => {
-    Alert.alert('Yêu cầu đăng nhập', `Vui lòng đăng nhập để xem ${featureName}.`, [
+    notify.alert('Yêu cầu đăng nhập', `Vui lòng đăng nhập để xem ${featureName}.`, [
       { text: 'Để sau', style: 'cancel' },
       { text: 'Đăng nhập', onPress: () => router.push('/login') },
     ]);
@@ -135,7 +136,7 @@ export default function SettingsScreen() {
       setProfileAvatarPreview(uploaded.url);
       setProfileAvatarKey(uploaded.key);
     } catch (err: any) {
-      Alert.alert('Lỗi tải ảnh', err?.message || 'Không thể tải ảnh đại diện lên lúc này.');
+      notify.alert('Lỗi tải ảnh', err?.message || 'Không thể tải ảnh đại diện lên lúc này.');
     } finally {
       setUploadingAvatar(false);
     }
@@ -147,7 +148,7 @@ export default function SettingsScreen() {
       return;
     }
     if (!profileName.trim()) {
-      Alert.alert('Lỗi', 'Họ tên không được để trống.');
+      notify.alert('Lỗi', 'Họ tên không được để trống.');
       return;
     }
     try {
@@ -162,10 +163,10 @@ export default function SettingsScreen() {
         ...savedUser,
         location: profileLocation.trim() || savedUser.location,
       });
-      Alert.alert('Thành công', 'Thông tin cá nhân đã được lưu thành công!');
+      notify.alert('Thành công', 'Thông tin cá nhân đã được lưu thành công!');
       setActiveModal(null);
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.message || 'Không thể lưu thông tin lúc này.');
+      notify.alert('Lỗi', err?.message || 'Không thể lưu thông tin lúc này.');
     } finally {
       setSavingProfile(false);
     }
@@ -177,15 +178,15 @@ export default function SettingsScreen() {
       return;
     }
     if (!currentPassword) {
-      Alert.alert('Lỗi', 'Vui lòng nhập mật khẩu hiện tại.');
+      notify.alert('Lỗi', 'Vui lòng nhập mật khẩu hiện tại.');
       return;
     }
     if (!isStrongEnoughPassword(newPassword)) {
-      Alert.alert('Lỗi', 'Mật khẩu mới tối thiểu 8 ký tự, gồm cả chữ và số.');
+      notify.alert('Lỗi', 'Mật khẩu mới tối thiểu 8 ký tự, gồm cả chữ và số.');
       return;
     }
     if (confirmNewPassword !== newPassword) {
-      Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp.');
+      notify.alert('Lỗi', 'Mật khẩu xác nhận không khớp.');
       return;
     }
 
@@ -196,9 +197,9 @@ export default function SettingsScreen() {
       setNewPassword('');
       setConfirmNewPassword('');
       setActiveModal(null);
-      Alert.alert('Thành công', 'Mật khẩu của bạn đã được cập nhật.');
+      notify.alert('Thành công', 'Mật khẩu của bạn đã được cập nhật.');
     } catch (err: any) {
-      Alert.alert('Lỗi đổi mật khẩu', err?.message || 'Không thể đổi mật khẩu lúc này.');
+      notify.alert('Lỗi đổi mật khẩu', err?.message || 'Không thể đổi mật khẩu lúc này.');
     } finally {
       setChangingPassword(false);
     }
@@ -211,6 +212,14 @@ export default function SettingsScreen() {
           router.push('/login');
           return;
         }
+        const ok = await notify.confirm({
+          title: 'Đăng xuất?',
+          message: 'Bạn có chắc muốn đăng xuất khỏi tài khoản này?',
+          confirmLabel: 'Đăng xuất',
+          cancelLabel: 'Ở lại',
+          destructive: true,
+        });
+        if (!ok) return;
         await authService.logout();
         setOrders([]);
         setUser(null);
@@ -259,7 +268,7 @@ export default function SettingsScreen() {
         }
         router.push('/checkout');
       } else {
-        Alert.alert(label, 'Tính năng đang hoạt động bình thường.');
+        notify.alert(label, 'Tính năng đang hoạt động bình thường.');
       }
     },
     [router, user, setUser, clearCart, openProfileModal],
@@ -378,7 +387,7 @@ export default function SettingsScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: theme.text }]}>Thông tin cá nhân</Text>
               <Pressable onPress={() => setActiveModal(null)} hitSlop={8}>
-                <Text style={[styles.modalClose, { color: theme.textSecondary }]}>✕</Text>
+                <Icon name="close" size={22} color={theme.textSecondary} />
               </Pressable>
             </View>
             <ScrollView contentContainerStyle={{ gap: Spacing.three, paddingBottom: Spacing.four }}>
@@ -476,7 +485,7 @@ export default function SettingsScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: theme.text }]}>Đổi mật khẩu</Text>
               <Pressable onPress={() => setActiveModal(null)} hitSlop={8}>
-                <Text style={[styles.modalClose, { color: theme.textSecondary }]}>✕</Text>
+                <Icon name="close" size={22} color={theme.textSecondary} />
               </Pressable>
             </View>
             <ScrollView contentContainerStyle={{ gap: Spacing.three, paddingBottom: Spacing.four }}>
@@ -519,7 +528,7 @@ export default function SettingsScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: theme.text }]}>Lịch sử đơn hàng</Text>
               <Pressable onPress={() => setActiveModal(null)} hitSlop={8}>
-                <Text style={[styles.modalClose, { color: theme.textSecondary }]}>✕</Text>
+                <Icon name="close" size={22} color={theme.textSecondary} />
               </Pressable>
             </View>
             <ScrollView contentContainerStyle={{ gap: Spacing.two, paddingBottom: Spacing.four }}>
@@ -612,7 +621,7 @@ export default function SettingsScreen() {
                   <Text style={[styles.langText, { color: active ? theme.primary : theme.text }]}>
                     {lang}
                   </Text>
-                  {active ? <Text style={{ color: theme.primary, fontWeight: '700' }}>✓</Text> : null}
+                  {active ? <Icon name="check" weight="bold" size={18} color={theme.primary} /> : null}
                 </Pressable>
               );
             })}
@@ -632,7 +641,7 @@ export default function SettingsScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: theme.text }]}>Trợ giúp & Hỗ trợ</Text>
               <Pressable onPress={() => setActiveModal(null)} hitSlop={8}>
-                <Text style={[styles.modalClose, { color: theme.textSecondary }]}>✕</Text>
+                <Icon name="close" size={22} color={theme.textSecondary} />
               </Pressable>
             </View>
             <ScrollView contentContainerStyle={{ gap: Spacing.three, paddingBottom: Spacing.four }}>
@@ -643,8 +652,11 @@ export default function SettingsScreen() {
                 <View
                   key={idx}
                   style={[styles.faqItem, { backgroundColor: theme.background, borderColor: theme.border }]}>
-                  <Text style={[styles.faqQ, { color: theme.text }]}>❓ {faq.q}</Text>
-                  <Text style={[styles.faqA, { color: theme.textSecondary }]}>👉 {faq.a}</Text>
+                  <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
+                    <Icon name="help" weight="fill" size={18} color={theme.primary} />
+                    <Text style={[styles.faqQ, { color: theme.text, flex: 1 }]}>{faq.q}</Text>
+                  </View>
+                  <Text style={[styles.faqA, { color: theme.textSecondary }]}>{faq.a}</Text>
                 </View>
               ))}
 
@@ -656,8 +668,14 @@ export default function SettingsScreen() {
                 <Text style={[styles.contactTitle, { color: theme.primary }]}>
                   Tổng đài hỗ trợ 24/7
                 </Text>
-                <Text style={{ color: theme.text, fontSize: 13 }}>📞 Hotline: 1900 1234 (Miễn phí)</Text>
-                <Text style={{ color: theme.text, fontSize: 13 }}>✉️ Email: hotro@elearning.fit.iuh.edu.vn</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Icon name="phone" size={16} color={theme.primary} />
+                  <Text style={{ color: theme.text, fontSize: 13 }}>Hotline: 1900 1234 (Miễn phí)</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Icon name="mail" size={16} color={theme.primary} />
+                  <Text style={{ color: theme.text, fontSize: 13 }}>Email: hotro@elearning.fit.iuh.edu.vn</Text>
+                </View>
               </View>
 
               <PrimaryButton
