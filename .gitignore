@@ -3,4 +3,6 @@ documents/database/
 .sync/
 *.jar
 *.sql
-*.backup
+*.backup.env 
+*.env 
+~$* 

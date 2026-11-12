@@ -1,10 +1,9 @@
 import { useLocalSearchParams, useRouter } from '@/navigation/routerHook';
 import { useState, useEffect } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { ChapterSection } from '@/components/course/chapter-section';
 import { CourseStats } from '@/components/course/course-stats';
@@ -14,6 +13,7 @@ import { QaThreadCard } from '@/components/course/qa-thread-card';
 import { QuestionComposer } from '@/components/course/question-composer';
 import { UploadCard } from '@/components/course/upload-card';
 import { CourseHero } from '@/components/ui/course-hero';
+import { SmartVideoPlayer } from '@/components/ui/smart-video-player';
 import { Screen } from '@/components/ui/screen';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { SectionHeader } from '@/components/ui/section-header';
@@ -61,6 +61,7 @@ export default function CoursePlayerScreen() {
   const [activeTab, setActiveTab] = useState<PlayerTab>('lessons');
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string>(DEFAULT_VIDEO);
+  const [autoPlay, setAutoPlay] = useState(false);
   const [courseData, setCourseData] = useState<CourseDetail | null>(null);
   const [chaptersList, setChaptersList] = useState<Chapter[]>([]);
   const [projectsList, setProjectsList] = useState<Project[]>(DEFAULT_PROJECTS);
@@ -68,10 +69,6 @@ export default function CoursePlayerScreen() {
   const [qaThreadsList, setQaThreadsList] = useState<QaThread[]>([]);
   const [questionText, setQuestionText] = useState('');
   const [submittingQa, setSubmittingQa] = useState(false);
-
-  const player = useVideoPlayer(currentVideoUrl, (p) => {
-    p.loop = true;
-  });
 
   const loadData = async () => {
     try {
@@ -83,11 +80,16 @@ export default function CoursePlayerScreen() {
       if (detail) setCourseData(detail);
       if (chaps && chaps.length > 0) {
         setChaptersList(chaps);
-        // Default to the first available/preview lesson
-        const firstPreview = chaps[0]?.lessons?.find((l) => l.status !== 'locked');
+        // Default to the first available/preview lesson across chapters
+        const firstPreview = chaps.flatMap((c) => c.lessons || []).find((l) => l.status !== 'locked');
         if (firstPreview && !activeLesson) {
           setActiveLesson(firstPreview);
+          setCurrentVideoUrl(firstPreview.videoUrl || detail?.introVideoUrl || DEFAULT_VIDEO);
+        } else if (!activeLesson && detail?.introVideoUrl) {
+          setCurrentVideoUrl(detail.introVideoUrl);
         }
+      } else if (detail?.introVideoUrl && !activeLesson) {
+        setCurrentVideoUrl(detail.introVideoUrl);
       }
       if (qas && qas.length > 0) setQaThreadsList(qas);
     } catch (err) {
@@ -132,14 +134,9 @@ export default function CoursePlayerScreen() {
 
     // Phát video bài học
     setActiveLesson(lesson);
-    const targetUrl = lesson.videoUrl || DEFAULT_VIDEO;
+    const targetUrl = lesson.videoUrl || courseData?.introVideoUrl || DEFAULT_VIDEO;
     setCurrentVideoUrl(targetUrl);
-    try {
-      player.replace(targetUrl);
-      player.play();
-    } catch {
-      // fallback
-    }
+    setAutoPlay(true);
     if (lesson.isPreview) {
       Alert.alert(
         '▶ Đang phát bài học thử miễn phí',
@@ -243,16 +240,21 @@ export default function CoursePlayerScreen() {
         accessibilityLabel="Hỏi trợ lý AI về khóa học này"
         onPress={() => router.push({ pathname: '/chat', params: { courseId: id, lessonId: activeLesson?.id } })}
         style={[styles.aiLink, { backgroundColor: theme.primarySoft, borderColor: theme.primaryBorder }]}>
-        <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>🤖 Hỏi trợ lý AI về khóa học này</Text>
+        <Image
+          source={require('../../assets/images/robot.png')}
+          style={styles.aiIcon}
+          resizeMode="contain"
+        />
+        <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>Hỏi trợ lý AI về khóa học này</Text>
       </Pressable>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Video Player view for active lesson */}
         {activeLesson ? (
           <View style={[styles.playerCard, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-            <VideoView
-              style={styles.videoPlayer}
-              player={player}
-              allowsPictureInPicture
+            <SmartVideoPlayer
+              url={currentVideoUrl}
+              autoPlay={autoPlay}
+              height={210}
             />
             <View style={styles.videoInfo}>
               <Text style={[styles.videoTitle, { color: theme.text }]}>
@@ -340,7 +342,8 @@ export default function CoursePlayerScreen() {
 }
 
 const styles = StyleSheet.create({
-  aiLink: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center', marginBottom: 8 },
+  aiLink: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 },
+  aiIcon: { width: 20, height: 20, borderRadius: 6 },
   content: {
     padding: Spacing.three,
     paddingBottom: Spacing.five,

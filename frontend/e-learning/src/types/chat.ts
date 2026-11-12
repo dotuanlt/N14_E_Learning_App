@@ -1,4 +1,3 @@
-/** Thẻ khóa học trợ lý AI nhắc tới (rút gọn từ CourseSummaryResponse của backend). */
 export interface ChatCourseCard {
   id: string;
   title: string;
@@ -17,7 +16,6 @@ export interface ChatMessage {
   content: string;
   courses: ChatCourseCard[];
   createdAt?: string;
-  /** Tin nhắn lỗi cục bộ (không lưu trên máy chủ), cho phép bấm "Thử lại". */
   error?: boolean;
 }
 

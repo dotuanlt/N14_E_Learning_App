@@ -1,8 +1,5 @@
 import { Platform } from 'react-native';
 
-/**
- * Bảng màu light/dark tích hợp đầy đủ token thiết kế Figma E-Learning App.
- */
 export const Colors = {
   light: {
     text: '#181528',
@@ -112,7 +109,6 @@ export const Colors = {
   },
 } as const;
 
-/** Màu minh họa và tag category (dùng chung) */
 export const Tints = {
   lavender: '#c7c2fe',
   peach: '#ffd9a8',

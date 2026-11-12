@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 function resolveApiBaseUrl(): string {
-  // 1. Tự động lấy IP của máy tính host từ Metro Bundler (chính xác tuyệt đối khi test trên Expo Go điện thoại)
+  // 1. Tự động lấy IP của máy tính host từ Metro Bundler
   const expoHost =
     Constants.expoConfig?.hostUri ||
     (Constants as any).expoGoConfig?.debuggerHost ||

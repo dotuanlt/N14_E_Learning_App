@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from '@/navigation/routerHook';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -82,7 +82,15 @@ export default function HomeScreen() {
               onPress={() => router.push('/chat')}
               style={[styles.iconBtn, { backgroundColor: theme.surface }]}
             >
-              <Icon sf="sparkles" emoji="🤖" size={20} color={theme.primary} />
+              <Image
+                source={require('../../assets/images/robot.png')}
+                style={{
+                  width: 23,
+                  height: 23,
+                  borderRadius: 10, 
+                }}
+                resizeMode="contain"
+              />
             </Pressable>
             <Pressable
               accessibilityRole="button"

@@ -25,10 +25,9 @@ import type { ChatCourseCard, ChatMessage } from '@/types/chat';
 const MAX_LENGTH = 1000;
 
 const GENERAL_SUGGESTIONS = [
-  'Gợi ý khóa học cho người mới bắt đầu lập trình',
+  'Gợi ý khóa học lập trình',
   'Khóa học nào đang được đánh giá cao nhất?',
   'Mình đã mua những khóa nào, nên học gì tiếp?',
-  'Chính sách hoàn tiền như thế nào?',
 ];
 const COURSE_SUGGESTIONS = [
   'Khóa học này gồm những nội dung gì?',
@@ -151,7 +150,11 @@ export default function ChatScreen() {
         <View style={[styles.column, { paddingHorizontal: Spacing.four }]}>
           <ScreenHeader title="Trợ lý AI" />
           <View style={styles.guestBox}>
-            <Text style={styles.guestEmoji}>🤖</Text>
+            <Image
+              source={require('../../assets/images/robot.png')}
+              style={styles.guestAvatar}
+              resizeMode="contain"
+            />
             <Text style={[styles.guestTitle, { color: theme.text }]}>Đăng nhập để trò chuyện với trợ lý AI</Text>
             <Text style={[styles.guestBody, { color: theme.muted }]}>
               Trợ lý giúp bạn chọn khóa học, giải đáp khi học, tra cứu đơn hàng và gợi ý lộ trình học.
@@ -255,7 +258,11 @@ export default function ChatScreen() {
               contentContainerStyle={{ paddingVertical: Spacing.three, gap: Spacing.three, flexGrow: 1 }}
               ListEmptyComponent={
                 <View style={styles.empty}>
-                  <Text style={styles.guestEmoji}>🤖</Text>
+                  <Image
+                    source={require('../../assets/images/robot.png')}
+                    style={styles.guestAvatar}
+                    resizeMode="contain"
+                  />
                   <Text style={[styles.guestTitle, { color: theme.text }]}>
                     Xin chào{user.fullName || user.name ? `, ${user.fullName || user.name}` : ''}!
                   </Text>
@@ -411,7 +418,7 @@ const styles = StyleSheet.create({
   input: { flex: 1, maxHeight: 120, fontSize: FontSizes.base, paddingVertical: Spacing.one + 2 },
   sendBtn: { width: 38, height: 38, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   guestBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.three, paddingBottom: Spacing.six },
-  guestEmoji: { fontSize: 44 },
+  guestAvatar: { width: 48, height: 48, borderRadius: 24},
   guestTitle: { fontSize: FontSizes.xl, fontWeight: '700', textAlign: 'center' },
   guestBody: { fontSize: FontSizes.base, textAlign: 'center', lineHeight: 22 },
   primaryBtn: { borderRadius: Radius.pill, paddingHorizontal: Spacing.five, paddingVertical: Spacing.three },

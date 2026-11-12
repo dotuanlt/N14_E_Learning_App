@@ -1,4 +1,3 @@
-// Safe cross-platform Storage Service
 class LocalStorage {
   private memory = new Map<string, string>();
 
@@ -14,7 +13,7 @@ class LocalStorage {
         }
       }
     } catch {
-      // Fallback to memory store
+
     }
     const val = this.memory.get(key);
     if (!val) return null;
@@ -32,7 +31,7 @@ class LocalStorage {
         window.localStorage.setItem(key, serialized);
       }
     } catch {
-      // Fallback
+
     }
     this.memory.set(key, serialized);
   }
@@ -43,7 +42,7 @@ class LocalStorage {
         window.localStorage.removeItem(key);
       }
     } catch {
-      // Fallback
+
     }
     this.memory.delete(key);
   }
@@ -54,7 +53,7 @@ class LocalStorage {
         window.localStorage.clear();
       }
     } catch {
-      // Fallback
+  
     }
     this.memory.clear();
   }

@@ -86,6 +86,7 @@ export type CourseDetail = {
   related: RelatedCourse[];
   stats: { likes: number; shares: number };
   coverImage?: string;
+  introVideoUrl?: string;
   owned?: boolean;
   priceNumber?: number;
 };

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from '@/navigation/routerHook';
 import { useState, useEffect } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BenefitRow } from '@/components/course/benefit-row';
 import { ChapterSection } from '@/components/course/chapter-section';
@@ -9,6 +9,7 @@ import { InstructorRow } from '@/components/course/instructor-row';
 import { PriceBar } from '@/components/course/price-bar';
 import { ReviewCard } from '@/components/course/review-card';
 import { CourseHero } from '@/components/ui/course-hero';
+import { SmartVideoPlayer } from '@/components/ui/smart-video-player';
 import { RatingLine } from '@/components/ui/rating-line';
 import { Screen } from '@/components/ui/screen';
 import { ScreenHeader } from '@/components/ui/screen-header';
@@ -52,6 +53,7 @@ export default function CourseOverviewScreen() {
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('all');
   const [expanded, setExpanded] = useState(false);
   const [following, setFollowing] = useState(false);
+  const [showIntroVideo, setShowIntroVideo] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -135,9 +137,26 @@ export default function CourseOverviewScreen() {
         accessibilityLabel="Hỏi trợ lý AI về khóa học này"
         onPress={() => router.push({ pathname: '/chat', params: { courseId } })}
         style={[styles.aiLink, { backgroundColor: theme.primarySoft, borderColor: theme.primaryBorder }]}>
-        <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>🤖 Hỏi trợ lý AI về khóa học này</Text>
+        <Image
+          source={require('../../assets/images/robot.png')}
+          style={styles.aiIcon}
+          resizeMode="contain"
+        />
+        <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 14 }}>Hỏi trợ lý AI về khóa học này</Text>
       </Pressable>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {showIntroVideo && courseData?.introVideoUrl ? (
+          <View style={[styles.introCard, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+            <SmartVideoPlayer url={courseData.introVideoUrl} autoPlay height={210} />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setShowIntroVideo(false)}
+              style={styles.closeIntroBtn}
+            >
+              <Text style={[styles.link, { color: theme.primary }]}>Đóng video giới thiệu</Text>
+            </Pressable>
+          </View>
+        ) : null}
         <CourseHero
           activeTab={activeTab}
           category={courseData?.category || 'Khóa học'}
@@ -150,7 +169,13 @@ export default function CourseOverviewScreen() {
             />
           }
           headline={courseData?.headline || ['Khóa học', 'Chuyên sâu']}
-          onPlayPress={() => router.push(coursePlayerHref(courseId))}
+          onPlayPress={() => {
+            if (courseData?.introVideoUrl) {
+              setShowIntroVideo(true);
+            } else {
+              router.push(coursePlayerHref(courseId));
+            }
+          }}
           tabs={tabs}
           onTabChange={(key) => setActiveTab(key as DetailTab)}
           title={courseData?.title || 'Đang tải khóa học...'}
@@ -249,7 +274,17 @@ export default function CourseOverviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  aiLink: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center', marginBottom: 8 },
+  aiLink: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 999, paddingVertical: 10, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 8 },
+  aiIcon: { width: 20, height: 20, borderRadius: 6 },
+  introCard: {
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  closeIntroBtn: {
+    paddingVertical: Spacing.two,
+    alignItems: 'center',
+  },
   content: {
     padding: Spacing.three,
     paddingBottom: Spacing.five,

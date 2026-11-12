@@ -241,6 +241,7 @@ export const courseService = {
           shares: 0,
         },
         coverImage: data.thumbnailUrl || undefined,
+        introVideoUrl: data.introVideoUrl || undefined,
         owned: Boolean(data.owned),
         priceNumber: data.salePrice ?? data.originalPrice ?? 0,
       };
